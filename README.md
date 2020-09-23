@@ -2,38 +2,76 @@
 
 A tool to generate binary polyglots.
 
-Loosely named after [Μιθραδάτης](https://en.wikipedia.org/wiki/Mithridates_VI_of_Pontus), a famous polyglot.
+Loosely named after [Μιθραδάτης](https://en.wikipedia.org/wiki/Mithridates_VI_of_Pontus),
+a famous polyglot.
 Pronounced `mɪtrə`.
 
 
-# Features
+## How to use
 
-For example, `mitra.py file1.png file2.dcm` gives you a working PNG/DICOM polyglot.
-
-It tries different layouts:
-Stacks (appended data), Cavities (blank space), Parasites (comments), Zippers (mutual comments).
-
-It returns the offsets where the payloads 'switch sizes' for multi-ciphertexts.
-Ex: `Z(80-162-286)-DICOM^TIFF.be3b767b.dcm.tif` is a DICOM/TIFF zipper
-where the payloads switch side at offsets `0x80`, `0x162` and `0x286`.
-The `-s` option extracts the 2 payloads separately, mixed with pseudo-random bytes.
-
+`mitra.py file1.png file2.dcm` gives you a working PNG/DICOM polyglot.
 
 Check Corkami [mini](https://github.com/corkami/pocs/tree/master/mini)
 or [tiny](https://github.com/corkami/pocs/tree/master/tiny) PoCs for input files.
 and the formats [repository](https://github.com/corkami/formats/tree/WIP) for some extra technical info.
 
-It doesn't support crypto-polyglots or any polyglots with overlapping bytes.
+
+# Features
 
 
-## Goals
+It tries different layouts:
+Stacks (appended data), Cavities (blank space), Parasites (comments), Zippers (mutual comments).
 
-The goal of this project was to explore polyglots layouts, formats abuses,
+It returns the offsets where the payloads 'switch sizes', which is useful for multi-ciphertexts.
+
+Ex: `Z(80-162-286)-DICOM^TIFF.be3b767b.dcm.tif` is a DICOM/TIFF zipper
+where the payloads switch side at offsets `0x80`, `0x162` and `0x286`.
+
+The `-s` option extracts the 2 payloads separately, mixed with pseudo-random bytes.
+
+It doesn't support crypto-polyglots or any polyglots with overlapping bytes,
+but it can definitely help to craft them.
+
+
+# Detection
+
+Since these polyglots contain the magic signatures of both formats,
+`file` may be able to detect them with the `--keep-going` arguments.
+(it does not *validate* the formats, but at least gives you some information).
+
+```
+$ file --keep-going --raw "C(66)-PNG-DICOM.7e22f58e.dcm.png"
+C(66)-PNG-DICOM.7e22f58e.dcm.png: PNG image data, 13 x 7, 1-bit colormap, non-interlaced
+- DICOM medical imaging data
+- data
+```
+
+
+# Goals
+
+
+## Exploration
+
+One goal is to explore polyglots layouts, formats abuses,
 and understand which format features makes which kind of abuse possible.
 
-You really don't need to understand a file format totally to abuse it:
-in a chunk-based format, just find where to `cut` the file,
-then wrap foreign data in a new chunk.
+You really don't need to understand a file format totally to abuse it.
+
+For example, in a chunk-based format, just find where to `cut` the file,
+then `wrap` foreign data in a new chunk and insert the chunk.
+So you just need to teach Mitra how to `identify` the type,
+where to `cut`, and how to `wrap`.
+
+
+## Demonstration
+
+You can prevent a software launch if you find a security risk,
+but a bad format design is not considered a risk in itself:
+it's just the parser's fault, not the designer's !
+
+So if you review a bad file format,
+then maybe with Mitra you can quickly generate polyglots with many other formats
+and demonstrate the risks.
 
 
 # Status
@@ -97,11 +135,19 @@ WASM     X X X X X X   X     X                                                  
 ID3v1                                                                                              .    0
 XZ                                                                                                   .  0
 
-Filetypes combinations: 322
+Formats combinations: 322
 ```
 
-Notes that some formats are containers and apply to several file types.
+Notes that some formats are containers (EBML, MP4, RIFF) and apply to several file types.
 
-OTOH some container-based types aren't supporting all features and
-can't be abused like other formats using the same container:
-for example, `JUNK` chunks in `RIFF` containers...
+
+# Remarks and recommendations
+
+- Enforcing a magic at offset zero should be standard.
+- Starting at offset zero and not enforcing a magic at zero is still exploitable (PS, MP4).
+- Starting at any offset makes polyglots trivial.
+- Enforcing a footer (like `XZ`, `ID3v1`) is a great way to check if a file isn't truncated,
+and prevents 'naturally' appended data.
+- Most formats have a way to store parasite data, except very simple ones.
+- Don't use a standard container in a non standard way.
+Use a different magic if you're only going to use similar structures to a limited extend.
