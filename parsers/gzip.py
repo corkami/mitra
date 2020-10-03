@@ -3,14 +3,17 @@
 # GZIP
 
 from parsers import FType
-import struct
+from helpers import *
 
 
-class GZIPparser(FType):
+class parser(FType):
+	DESC = "gzip"
+	TYPE = "GZ"
+	MAGIC = b"\x1f\x8b"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Gzip"
 		self.start_o = 0 # yes, it's required 
 
 		self.bParasite = True
@@ -21,13 +24,9 @@ class GZIPparser(FType):
 		self.prewrap = 2
 
 
-	def identify(self):
-		return self.data.startswith(b"\x1f\x8b")
-
-
 	def wrap(self, data):
 		return b"".join([
-			struct.pack("<H", len(data)),
+			int2l(len(data)),
 			data,
 		])
 

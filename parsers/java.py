@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
 from parsers import FType
-import struct
+from helpers import *
 
 
-class JAVAparser(FType):
+class parser(FType):
+	DESC = "Java Class"
+	TYPE = "Java"
+	MAGIC = b"\xca\xfe\xba\xbe"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Java"
 
 		self.bParasite = True # append an UTf8 buffer at the end of constant pool
 		self.parasite_o = 0x9
@@ -18,14 +21,15 @@ class JAVAparser(FType):
 
 		self.cut = 0x0a
 		self.poolcount_o = 8
+		self.prewrap = 3
 
 
 	def identify(self):
-		if not self.data.startswith(b"\xca\xfe\xba\xbe"): # potential collision with old school Mach-O binaries
+		if not self.data.startswith(self.MAGIC): # potential collision with old school Mach-O binaries
 			return False
 
 		off = self.poolcount_o
-		self.poolcount = struct.unpack(">H", self.data[off:off+2])[0]
+		self.poolcount = get2b(self.data, off)
 		return True
 
 
@@ -36,7 +40,7 @@ class JAVAparser(FType):
 			type_ = host[off]
 			off += 1
 			if type_ == 1: # utf8
-				string_l = struct.unpack(">H", host[off:off+2])[0]
+				string_l = get2b(host, off)
 				off += string_l + 2
 
 			elif type_ == 7: # class ref
@@ -78,11 +82,11 @@ class JAVAparser(FType):
 
 
 	def wrap(self, parasite):
-		wrapped = b"\1" + struct.pack(">H", len(parasite)) + parasite
+		wrapped = b"\1" + int2b(len(parasite)) + parasite
 		return wrapped
 
 
 	def fixformat(self, d, delta):
 		off = self.poolcount_o
-		d = d[:off] + struct.pack(">H", self.poolcount + 1) + d[off+2:]
+		d = d[:off] + int2b(self.poolcount + 1) + d[off+2:]
 		return d

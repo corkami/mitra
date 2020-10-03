@@ -4,31 +4,33 @@ import argparse
 ARGS = {
 	"VERBOSE" : False,
 	"REVERSE" : False,
-	"SPLIT"   : True,
+	"SPLIT"   : False,
+	"FORCE"   : False,
 	"SPLITDIR": "",
 	"OUTDIR"  : "",
 	"NOFILE"  : False,
 	"PAD"     : 0 * 1024, # FTR: 128b DICOM / 1024 kb PDF / 32Kb ISO
+	"AESGCM"  : True,
 }
 
 
-def GetArgs(l):
+def getVars(l):
 	global ARGS
 	return [ARGS[i] for i in l]
 
 
-def GetArg(k):
+def getVar(k):
 	global ARGS
 	return ARGS[k]
 
 
-def SetArg(k, v):
+def setVar(k, v):
 	global ARGS
 	ARGS[k] = v
 
 
 def dprint(s):
-	if GetArg("VERBOSE"):
+	if getVar("VERBOSE"):
 		print(("> " + s))
 
 
@@ -43,6 +45,8 @@ def Setup(desc):
 		help="verbose output.")
 	parser.add_argument('-n', '--nofile', default=False, action="store_true",
 		help="Don't write any file.")
+	parser.add_argument('-f', '--force', default=False, action="store_true",
+		help="Force file 2 as binary blob.")
 	parser.add_argument('-o', '--outdir',
 		help="directory where to write polyglots.")
 	parser.add_argument('-r', '--reverse', action="store_true",
@@ -58,33 +62,37 @@ def Setup(desc):
 	args = parser.parse_args()
 
 	if args.verbose:
-		SetArg("VERBOSE", True)
+		setVar("VERBOSE", True)
 		dprint("Arguments parsing:")
 		dprint("Verbose is ON")
 
 	if args.nofile:
-		SetArg("NOFILE", True)
+		setVar("NOFILE", True)
 		dprint("NoFile is ON")
 
+	if args.force:
+		setVar("FORCE", True)
+		dprint("Force is ON")
+
 	if args.reverse:
-		SetArg("REVERSE", True)
+		setVar("REVERSE", True)
 		dprint("Reverse is ON")
 
 	if args.split:
-		SetArg("SPLIT", True)
+		setVar("SPLIT", True)
 		dprint("Split is ON")
 
 	if args.splitdir:
-		SetArg("SPLITDIR", args.splitdir)
-		dprint("Split directory output is %s" % repr(GetArg("SPLITDIR")))
+		setVar("SPLITDIR", args.splitdir)
+		dprint("Split directory output is %s" % repr(getVar("SPLITDIR")))
 
 	if args.outdir:
-		SetArg("OUTDIR", args.outdir)
-		dprint("Polyglots directory output is %s" % repr(GetArg("OUTDIR")))
+		setVar("OUTDIR", args.outdir)
+		dprint("Polyglots directory output is %s" % repr(getVar("OUTDIR")))
 
 	if args.pad != 0:
 		pad = args.pad[0] * 1024
-		SetArg("PAD", pad)
+		setVar("PAD", pad)
 		dprint("Padding set to 0x%x" % pad)
 	dprint("")
 	return args

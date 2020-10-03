@@ -17,34 +17,35 @@ from parsers import FType
 #   to encode a line comment, starting with '%'
 
 
-class PSparser(FType):
+class parser(FType):
+	DESC = "PS / PostScript"
+	TYPE = "PS"
+	MAGIC = b"%!PS" # the magic actually shouldn't be at offset 0 but it's usually present.
+	PREWRAP = b"/{(" # nameless function declaration
+	POSTWRAP = b"\n)\n}\n"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "PS"
 
 		self.bParasite = True
 
-		self.parasite_o = 3          # right after the function declaration
-		self.parasite_s = 0xFFFFFF  # quite unclear
-		
 		# Magic can be actually further but only valid characters
 		# and postscript logic must be present.
 		self.start_o = 0
 
 		self.cut = 0
-		self.prewrap = 4
+		self.prewrap = len(self.PREWRAP)
+		self.postwrap = len(self.POSTWRAP)
 
+		self.parasite_o = self.prewrap   # right after the function declaration
+		self.parasite_s = 0xFFFFFF       # quite unclear
 
-	def identify(self):
-		# the magic actually shouldn't be at offset 0 but it's usually present.
-		return self.data.startswith(b"%!PS")
-
-
+		
 	def wrap(self, data):
 		wrapped = b"".join([
-			b"/{(",      # nameless function declaration
+			self.PREWRAP,      
 			data,
-			b"\n)\n}\n",
+			self.POSTWRAP,
 		])
 		return wrapped

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Executable and Linkable Format
 
 # possible parasite strategies:
 # 1. move Program Header further, right after File Header
@@ -11,11 +10,14 @@ from parsers import FType
 
 from helpers import *
 
-class ELFparser(FType):
+class parser(FType):
+	DESC = "ELF / Executable and Linkable Format"
+	TYPE = "ELF"
+	MAGIC = b"\x7fELF"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ELF"
 		self.bParasite = True
 		self.parasite_o = 0x40 # dependant on the host file
 		self.parasite_s = 0xFFFFFFFF
@@ -24,7 +26,7 @@ class ELFparser(FType):
 
 	def identify(self):
 		d = self.data
-		if not d.startswith(b"\x7fELF"):
+		if not d.startswith(self.MAGIC):
 			return False
 
 		self.bits = 32 if d[4:4+1] == bytes([1]) else 64

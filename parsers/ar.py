@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 
-# Unix `archiver` ar
-
-
 from parsers import FType
 
 
-class ARparser(FType):
-	magic = b"!<arch>\n"
-	magic_s = len(magic)
+class parser(FType):
+	DESC = "Ar / Unix archiver"
+	TYPE = "AR"
+	MAGIC = b"!<arch>\n"
+	MAGIC_s = len(MAGIC)
 
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Ar"
 
 		self.bParasite = True
 		self.parasite_s = 0xffffff # ?
@@ -22,14 +20,10 @@ class ARparser(FType):
 		self.bAppData = True # risks of "malformed archive", but wrappending ok
 
 		self.hdr_s = 60 # len(self.makeHdr(b""))
-		self.cut = self.magic_s
+		self.cut = self.MAGIC_s
 
-		self.parasite_o = self.magic_s + self.hdr_s
+		self.parasite_o = self.MAGIC_s + self.hdr_s
 		self.prewrap = self.hdr_s
-
-
-	def identify(self):
-		return self.data.startswith(self.magic)
 
 
 	def makeHdr(self, filename, timestamp=0, owner=0, group=0, perms=0, size=0):

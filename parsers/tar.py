@@ -4,11 +4,15 @@ from parsers import FType
 import tarfile
 import io
 
-class TARparser(FType):
+class parser(FType):
+	DESC = "TAR / Tape Archive"
+	TYPE = "TAR"
+	MAGIC = b"\0ustar"
+	MAGIC_o = 0x100
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "TAR"
 		self.bAppData = True # YMMV - some corruption messages.
 
 		# the filename can be sacrificed to store info
@@ -16,15 +20,18 @@ class TARparser(FType):
 		self.start_o = 0
 
 		self.bParasite = True # add a dummy file early in the archive
+		self.cut = 512
 		self.parasite_o = 512
 		self.parasite_s = 0xffffff # ?
 
+		self.bZipper = True
+
 
 	def identify(self):
-		return self.data[0x100:0x100 + 6] == b"\0ustar" # other magic are possible. This is unrealistically strict.
+		# other magic are possible. This is unrealistically strict.
+		return self.data[self.MAGIC_o:self.MAGIC_o + 6] == self.MAGIC
 
-
-	def parasitize(self, fparasite):
+	def parasitize_(self, fparasite):
 		Hparasite = io.BytesIO(fparasite.data)
 
 		tarinfo = tarfile.TarInfo(name=".") # null file makes the file truncated
@@ -39,15 +46,20 @@ class TARparser(FType):
 		return Hfile.getvalue()[:-0x2400] + self.data, [] # TODO:swaps
 
 
+	def normalize(self):
+		self.data = self.emptyHdr() + self.data
+
+
 	def fixchecksum(self, d):
 		CHECKSUM_o = 0x94
+		CHECKSUM_s = 8
 		HEADER_s = 512
 
 		# grab the header
 		hdr = list(d[:HEADER_s])
 
 		# wipe the checksum field with spaces
-		for i in range(8):
+		for i in range(CHECKSUM_s):
 			hdr[i + CHECKSUM_o] = ord(b" ")
 
 		# add all chars of the header to an unsigned int
@@ -55,13 +67,30 @@ class TARparser(FType):
 		for i in hdr:
 			c += i
 
-		print(oct(c)[2:])
 		# store the unsigned int in octal, followed by space then NULL
 		for i, j in enumerate(oct(c)[2:]):
 			hdr[i + CHECKSUM_o] = ord(j)
 		hdr[CHECKSUM_o + 6] = ord(b"\0")
 
 		return bytes(hdr) + d[HEADER_s:]
+ 
+
+	def fixformat(self, d, delta):
+		# we just update the new size in the header.
+		# the size is already rounded up to 512.
+		SIZE_o = 0x7c
+		SIZE_s = 11
+		osize = oct(delta)[2:].rjust(SIZE_s, "0")
+		d = d[:SIZE_o] + osize.encode() + d[SIZE_o + SIZE_s:]
+		self.data = self.fixchecksum(d)
+		return self.data
+
+
+	def fixparasite(self, parasite):
+		# word alignment
+		if len(parasite) % 512 != 0:
+			parasite += b"\0" * (512 - len(parasite) % 512)
+		return parasite
 
 
 	def emptyHdr(self):
@@ -84,43 +113,49 @@ class TARparser(FType):
 		return hdr
 
 
-# TODO: move as a separate parser ?
-
 # Reverse parasite (not a zipper)
+# Works for PNG, not for others
 #
-#          *          TAR                */TAR        
-#       +-----+     + - - +             +-----+     
-# Head1 |\\\\\|     ://///:       Head1 |\\|//| Fake0
+# Strategy:
+# 1. add an empty file header
+# 2. overwrite the file name with a header
+#
+#        Zero         TAR               Zipper
+#       +-----+     + - - +             +-----+
+# ZHdr  |\\\\\|     ://///:       ZHdr  |\\|//| Fake0
 #       +-----+ - - +-----+             +-----+
 #       :     :     |/////|             |/////|
 #       :     :     |/////| TAR         |/////| TAR
 #       :     :     |/////|             |/////|
 #       +-----+ - - +-----+             +-----+
-# Body1 |\\\\\|                   Body1 |\\\\\|
+# ZBody |\\\\\|                   ZBody |\\\\\|
 #       |\\\\\|                         |\\\\\|
 #       +-----+                         +-----+
 
-	def zipper(self, fhost): # TAR is not the host
-		Tdata = self.data
 
-		Hcut = fhost.getCut()
-		if Hcut is None: # TODO: double check
+	def zipper(self, zero): # TAR is not the host
+		tdata = self.data
+
+		zcut = zero.getCut()
+		if zcut is None: # TODO: double check
 			return None, []
-		Hprewrap = fhost.prewrap
 
-		TarCut = Hcut + Hprewrap
-		if TarCut > 0x63:
+		tcut = zcut + zero.prewrap
+		if tcut > 0x63:
+			# FIXME: follow verbosity level
+			print("> RevParasite: Header too big to fit in Tar header.")
 			return None, []
 
 # - prepend fake header to TAR.
-		TData = self.emptyHdr() + Tdata
+		tdata = self.emptyHdr() + tdata
 
 # - cut out the length necessary for 
-		self.data = TData[TarCut:]
+		self.data = tdata[tcut:]
 
-		# TODO:swaps
-		dMerged, swaps = fhost.parasitize(self)
-		if dMerged is None:
+		zipper, swaps = zero.parasitize(self)
+		if zipper is None:
 			return None, []
 
-		return self.fixchecksum(dMerged), [] # TODO:swaps
+		zipper = self.fixchecksum(zipper)
+		# FIXME: swaps are actually reversed because it's a reverse parasite
+		return zipper, swaps

@@ -3,7 +3,7 @@
 # WebAssembly
 
 from parsers import FType
-import struct
+from helpers import int2b
 
 def toLEB128(n):
 	buf = []
@@ -20,11 +20,14 @@ def toLEB128(n):
 assert toLEB128(128) == b'\x80\x01'
 assert toLEB128(127) == b'\x7f'
 
-class WASMparser(FType):
+class parser(FType):
+	DESC = "WASM / WebAssembly"
+	TYPE = "WASM"
+	MAGIC = b"\0asm\1\0\0\0"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "WASM"
 
 		self.bAppData = False  # :(
 
@@ -33,14 +36,20 @@ class WASMparser(FType):
 		self.parasite_s = 0xFFFFFFFF
 
 		self.cut = 8
-		self.prewrap = 5 #TODO: it's variable, but not supported case yet
+		self.prewrap = 4
 
 
-	def identify(self):
-		return self.data.startswith(b"\0asm\1\0\0\0")
+	def getPrewrap(self, parasite_s):
+		parasite__ = b"\0" * parasite_s
+		wrapped = self.wrap(parasite__)
+		delta = len(wrapped) - parasite_s
+		assert delta >= self.prewrap
+
+		self.prewrap = delta
+		return delta
 
 
 	def wrap(self, parasite, name=b""):
-		wrapped = struct.pack(">H", len(name)) + name + parasite
+		wrapped = int2b(len(name)) + name + parasite
 		wrapped = b"\0" + toLEB128(len(wrapped)) + wrapped
 		return wrapped

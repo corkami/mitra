@@ -31,11 +31,14 @@ assert _8to7(128) == b"\0\0\1\0"
 assert _8to7(13695) == b"\0\0\x6a\x7F"
 
 
-class ID3V2parser(FType):
+class parser(FType):
+	DESC = "ID3v2 [Tag]"
+	TYPE = "ID3v2"
+	MAGIC = b"ID3\3\0"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ID3v2"
 		self.bParasite = True
 		self.cut = 0xA
 		self.parasite_o = 0x14
@@ -46,10 +49,6 @@ class ID3V2parser(FType):
 		self.bAppData = True
 
 		self.prewrap = 4+4+2
-
-
-	def identify(self):
-		return self.data.startswith(b"ID3\3\0")
 
 
 	def wrap(self, data, type_=b"JUNK"):

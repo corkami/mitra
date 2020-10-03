@@ -13,11 +13,14 @@ def dprint(s):
 		print(("D " + s))
 
 
-class MP4parser(FType):
+class parser(FType):
+	DESC = "MP4 / Iso Base Media Format [container]"
+	TYPE = "MP4"
+	ATOM = b"ftyp"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "MP4"
 		self.bParasite = True
 		self.parasite_o = 0x8
 		self.parasite_s = 0xFFFFFFFF # also exists in 64b flavor
@@ -29,7 +32,7 @@ class MP4parser(FType):
 	def identify(self):
 		# ugly and totally incomplete but just works
 		# limiting on purpose on standard files
-		if self.data[4:4+4] != b"ftyp": # and self.data[0:3] != b"\0\0\0"
+		if self.data[4:4+4] != self.ATOM: # and self.data[0:3] != b"\0\0\0"
 			return False
 
 		# heif/c parsers don't support parasites or even appended data !?

@@ -23,12 +23,12 @@ template = b"""%%PDF-1.3
 1 0 obj
 <</Length 2 0 R>>
 stream
-%(payload)s
+
 endstream
 endobj
 
 2 0 obj
-%(lenPayload)i
+_PAYLOADL_
 endobj
 
 3 0 obj
@@ -44,11 +44,14 @@ endobj
 """
 
 
-class PDFparser(FType):
+class parser(FType):
+	DESC = "Portable Document Format"
+	TYPE = "PDF"
+	MAGIC = b"%PDF-1"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "PDF"
 
 		# the whole `%PDF-1.3` signature has to be present in the first 1kb 
 		self.start_o = 1024 - 8
@@ -60,15 +63,10 @@ class PDFparser(FType):
 		self.parasite_s = 0xFFFFFFFF
 
 # Doesn't apply the usual way
-#		self.cut = 0x30
-#		self.prewrap = 0
+		self.cut = 0x30
 
 
-	def identify(self):
-		return self.data.startswith(b"%PDF-1")
-
-
-	def fixformat(self, contents, delta=0):
+	def fixformat(self, contents, delta):
 		"""dumb [start]xref fix: fixes old-school xref with no holes, with hardcoded \\n"""
 		startXREF = contents.find(b"\nxref\n0 ") + 1
 		endXREF = contents.find(b" \n\n", startXREF) + 1
@@ -81,6 +79,7 @@ class PDFparser(FType):
 			# mutool declare its first xref like this
 			b"0000000000 00001 f "
 			]
+
 
 		i = 1
 		while i < objCount:
@@ -104,6 +103,12 @@ class PDFparser(FType):
 		endStartXref = contents.find(b"\n%%EOF", startStartXref)
 		contents = contents[:startStartXref] + b"%i" % startXREF + contents[endStartXref:]
 
+		# offset @ cut + delta + 0x1C
+		contents = contents.replace(b"_PAYLOADL_", b"%010i" % delta)
+
+		# FIXME: find out why wrappending is one byte too long
+		contents = contents[:-1]
+
 		return contents
 
 
@@ -118,15 +123,6 @@ class PDFparser(FType):
 		with open("merged.pdf", "rb") as f:
 			dm = f.read()
 		os.remove('merged.pdf')
-
-		return dm
-
-
-	def parasitize(self, fparasite):
-		dm = self.normalize()
-
-		payload = fparasite.data
-		lenPayload = len(payload)
 
 		# removing dummy page reference
 		count = getCount(dm) - 1
@@ -144,13 +140,12 @@ class PDFparser(FType):
 
 		# need this to map b'payload' to the payload var ...?
 		mapping = {}
-		for s in ("payload", "lenPayload", "count", "kids"):
+		for s in ("count", "kids"):
 			mapping[s.encode()] = locals()[s]
 
 		# aligning payload header
 		stage1 = template % mapping
 
 		contents = (template % mapping) + dm
-		contents = self.fixformat(contents)
 
-		return contents, [] # TODO:swaps
+		self.data = contents

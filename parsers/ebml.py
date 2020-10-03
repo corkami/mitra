@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Extensible Binary Meta Language
-
 # strategy: attach a file, maybe change elements order, skip mimetype 
 # TODO: experiment with ebmlite and XML editing
 
@@ -19,12 +17,11 @@ info = """
 
 from parsers import FType
 
-class EBMLparser(FType):
+class parser(FType):
+	DESC = "EBML / Extensible Binary Meta Language [container]"
+	TYPE = "EBML"
+	MAGIC = b"\x1A\x45\xDF\xA3"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "EBML"
-
-
-	def identify(self):
-		return self.data.startswith(b"\x1A\x45\xDF\xA3")

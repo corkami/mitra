@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# International Laser Display Association vector images
-
 from parsers import FType
 from helpers import *
 
@@ -10,11 +8,14 @@ from helpers import *
 #   (requires an extra palette afterwards)
 
 
-class ILDAparser(FType):
+class parser(FType):
+	DESC = "ILDA / International Laser Display Association vector images"
+	TYPE = "ILDA"
+	MAGIC = b"ILDA"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ILDA"
 
 		self.bParasite = True
 		self.parasite_o = 32         # size of section header
@@ -22,12 +23,6 @@ class ILDAparser(FType):
 
 		self.cut = 0
 		self.prewrap = 32
-
-
-	def identify(self):
-		if not self.data.startswith(b"ILDA"):
-			return False
-		return True
 
 
 	def fixparasite(self, parasite):

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Better Portable Graphics
-
 from parsers import FType
 
 
@@ -41,84 +39,88 @@ assert ue7_dec(b"\x81\0") == (128,2)
 assert ue7_dec(b"\x81\1") == (129,2)
 
 
-def getBPGinfo(data):
-	off = 5
-	b = data[off]
-	ext_b = (b >> (7-4))  & 0b1
-
-	off += 1
-
-	width, delta = ue7_dec(data[off:])
-	off += delta
-	height, delta = ue7_dec(data[off:])
-	off += delta
-	image_l, delta = ue7_dec(data[off:])
-	off += delta
-
-	header = list(data[:off])
-
-# TODO: probably buggy if extensions are already present
-	if ext_b == 1:
-			ext_l, delta = ue7_dec(data[off:])
-			off += delta
-
-			toff = 0
-			while (toff < ext_):
-					ext_tag, delta = ue7_dec(data[off + toff:])
-					toff += delta
-					ext_tag_l, delta = ue7_dec(data[off + toff:])
-					toff += delta
-					toff += ext_tag_l
-
-			off += ext_l
-
-	return header, data[off:]
-
-
 ###############################################################################
 
 
-class BPGparser(FType):
+class parser(FType):
+	DESC = "BPG / Better Portable Graphics"
+	TYPE = "BPG"
+	MAGIC = b"BPG\xFB"
+	FLAGS_o = 5
+
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "BPG"
 		self.bAppData = False # rejected by bpgview
 		self.bParasite = True
-		self.parasite_o = 0xC
+		self.parasite_o = 0x10
 		self.parasite_s = 0xffffff # ?
 
-		self.cut = 0xE # TODO: actually variable
+		self.cut = 9 # TODO: actually variable
+		self.prewrap = 3
 
 
-	def identify(self):
-		return self.data.startswith(b"BPG\xFB")
-
-
-	def parasitize(self, fparasite):
-		host = self.data
-		parasite = fparasite.data
-
-		header, image = getBPGinfo(self.data) 
-
-		# set extension flag to 1
-		header[5] = header[5] | 8
-
-		result = bytes(header)
-
-		tag_len = len(parasite)
+	def wrap(self, data): # _s means string representation
+		tag_len = len(data)
 		tag_len_s = ue7_encs(tag_len)
 
-		tag_s = ue7_encs(1) # just need a non-5 value
+		tag_s = ue7_encs(1) # just need a non-5 (= animation_control) value
 		ext_l = len(tag_len_s) + len(tag_s) + tag_len
 		ext_l_s = ue7_encs(ext_l)
 
-		result += ext_l_s
-		result += tag_s
-		result += tag_len_s
-		parasite_o = len(result)
-		result += parasite
+		prewrap = ext_l_s
+		prewrap += tag_s
+		prewrap += tag_len_s
+		wrapped = prewrap + data
+		return wrapped
 
-		result += image
 
-		return result, [parasite_o, parasite_o + len(parasite)]
+	def fixformat(self, d, delta):
+		flags = d[self.FLAGS_o]
+		flags |= 8
+		d = d[:self.FLAGS_o] + bytes([flags]) + d[self.FLAGS_o + 1:] # set extension flag
+		return d
+
+
+	def getCut(self):
+		data = self.data
+		off = self.FLAGS_o
+		b = data[off]
+		ext_b = (b >> (7-4))  & 0b1
+
+		off += 1
+
+		width, delta = ue7_dec(data[off:])
+		off += delta
+		height, delta = ue7_dec(data[off:])
+		off += delta
+		image_l, delta = ue7_dec(data[off:])
+		off += delta
+
+		# TODO: probably buggy if extensions are already present
+		if ext_b == 1:
+				ext_l, delta = ue7_dec(data[off:])
+				off += delta
+
+				toff = 0
+				while (toff < ext_l):
+						ext_tag, delta = ue7_dec(data[off + toff:])
+						toff += delta
+						ext_tag_l, delta = ue7_dec(data[off + toff:])
+						toff += delta
+						toff += ext_tag_l
+
+				off += ext_l
+		self.cut = off
+		return self.cut
+
+
+	def getPrewrap(self, parasite_s):
+		parasite__ = b"\0" * parasite_s
+		wrapped = self.wrap(parasite__)
+		delta = len(wrapped) - parasite_s
+		assert delta >= self.prewrap
+
+		self.prewrap = delta
+		return delta

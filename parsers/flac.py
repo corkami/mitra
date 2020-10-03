@@ -12,11 +12,14 @@ from helpers import *
 #   (seems to work also right after the magic)
 
 
-class FLACparser(FType):
+class parser(FType):
+	DESC = "Flac / native Free Lossless Audio Codec"
+	TYPE = "Flac"
+	MAGIC = b"fLaC"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Flac"
 
 		# Risky? the file is ending with streams of audio data but it seems robust to determine its end.
 		self.bAppData = True
@@ -28,10 +31,6 @@ class FLACparser(FType):
 		self.cut = 4
 		self.prewrap = 2*4 # Header:4, Application ID:4
 		self.postwrap = 0
-
-
-	def identify(self):
-		return self.data.startswith(b"fLaC")
 
 
 	def getCut(self):

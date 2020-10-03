@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
 from parsers import FType
-import struct
+from helpers import *
 
-class PEparser(FType):
+class parser(FType):
+	DESC = "Portable Executable (hdr)"
+	TYPE = "PE(hdr)"
+	MAGIC = b"MZ"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "PE(hdr)"
 		self.bAppData = True # let's not have duplicates
 		self.bParasite = True
 		# alignment, but actually first physical offset of a section for big headers
@@ -17,10 +20,6 @@ class PEparser(FType):
 		self.parasite_s = 0x100
 
 		self.cut = 2
-
-
-	def identify(self):
-		return self.data.startswith(b"MZ") # :D
 
 
 	def fixparasite(self, parasite):
@@ -53,14 +52,13 @@ class PEparser(FType):
 		# update SizeOfHeaders
 		SoH_o = 0x54 # local header in the PE header
 		SoH_s = 4
-		SizeOfHeader = struct.unpack("<I", peHDR[SoH_o:SoH_o+SoH_s])[0] + delta
-		peHDR = peHDR[:SoH_o] + struct.pack("<I", SizeOfHeader) + peHDR[SoH_o + SoH_s:]
+		peHDR = inc4l(peHDR, SoH_o, delta)
 
 		# combine new PE header with rest of the PE
 		merged = b"".join([
-			b"MZ",                       # Magic
-			b"\0" * (DOSHdr_s-2-4),      # DOS header slack space
-			struct.pack("<I", PEhdr_o), # pointer to new PE header offset
+			b"MZ",                  # Magic
+			b"\0" * (DOSHdr_s-2-4), # DOS header slack space
+			int4l(PEhdr_o),         # pointer to new PE header offset
 			parasite,
 			peHDR,
 			b"\0" * (PEHeadersMax - PEhdr_o - len(peHDR)),

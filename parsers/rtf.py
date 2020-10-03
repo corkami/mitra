@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Rich Text Format
-
 # http://www.biblioscape.com/rtf15_spec.htm
 
 # https://www.decalage.info/rtf_tricks
@@ -16,30 +14,34 @@
 from parsers import FType
 
 
-class RTFparser(FType):
-	template = rb"{\pict\bin%06i "
+class parser(FType):
+	DESC = "RTF / Rich Text Format"
+	TYPE = "RTF"
+	MAGIC = b"{\\rtf1" # can be shorter in practice
+
+	# declaring a picture stored in binary
+	TEMPLATE = rb"{\pict\bin%06i "
 
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "RTF"
 
 		self.bParasite = True
 		self.parasite_o = 0x17
 		self.parasite_s = 999999
 
 		self.cut = 6
-		self.prewrap = len(self.template % 0) # self.parasite_o - self.cut
+		self.prewrap = len(self.TEMPLATE % 0) # self.parasite_o - self.cut
 
 
 	def identify(self):
-		return self.data.startswith(b"{\\rtf1") # can be shorter in practice
+		return self.data.startswith(self.MAGIC) 
 
 
 	def wrap(self, parasite):
 		return b"".join([
-			self.template % len(parasite),
+			self.TEMPLATE % len(parasite),
 			parasite,
 			b"}"
 			])

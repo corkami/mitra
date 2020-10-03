@@ -5,11 +5,14 @@
 from parsers import FType
 
 
-class ID3V1parser(FType):
+class parser(FType):
+	DESC = "ID3v1 [Tag]"
+	TYPE = "ID3v1"
+	MAGIC = b"TAG"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ID3v1"
 
 		# the L3Frames should start at offset 0 in a pure ID3v1 file
 		self.start_o = 0
@@ -21,4 +24,4 @@ class ID3V1parser(FType):
 
 
 	def identify(self):
-		return self.data[-128:].startswith(b"TAG")
+		return self.data[-128:].startswith(self.MAGIC)

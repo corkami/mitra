@@ -9,11 +9,13 @@ from helpers import *
 # -> insert parasite after the structures, and update each offset
 
 
-class ICOparser(FType):
+class parser(FType):
+	DESC = "ICO"
+	TYPE = "ICO"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ICO"
 
 		self.bParasite = True
 		self.parasite_o = 0x70 # rought estimate - dependant

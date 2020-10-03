@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Graphics Interchange Format
-
 from parsers import FType
 
 
@@ -13,11 +11,13 @@ def readFlags(ll, f):
 	return flags
 
 
-class GIFparser(FType):
+class parser(FType):
+	DESC = "GIF / Graphics Interchange Format"
+	TYPE = "GIF"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "GIF"
 
 		self.bParasite = True
 		self.parasite_o = 16     # Extension, right after the header (extreme case if there's no global palette)

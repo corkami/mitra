@@ -11,25 +11,26 @@ from parsers import FType
 #   Hopefully it doesn't crash anything ? :D
 
 
-class NESparser(FType):
-	trainer_o = 16
-	trainer_s = 512
+class parser(FType):
+	DESC = "iNES"
+	TYPE = "NES"
+	MAGIC = b"NES\x1a"
+	TRAINER_o = 16
+	TRAINER_s = 512
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "NES"
 
 		self.bParasite = True
-		self.parasite_o = self.trainer_o
-		self.parasite_s = self.trainer_s
+		self.parasite_o = self.TRAINER_o
+		self.parasite_s = self.TRAINER_s
 
-		self.cut = self.trainer_o
+		self.cut = self.TRAINER_o
 		self.prewrap = self.parasite_o - self.cut
 
-
-	def identify(self):
-		return self.data.startswith(b"NES\x1a")
+#		self.precav_o = 0x16
+#		self.precav_s = 512
 
 
 	def normalize(self):

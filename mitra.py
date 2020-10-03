@@ -5,68 +5,66 @@ import random
 import sys
 import hashlib
 import os.path
-from cmd import *
+from args import *
 
-__version__ = "0.1" # https://semver.org/
-__date__ = "2020-09-22"
+__version__ = "0.2" # https://semver.org/
+__date__ = "2020-10-03"
 __description__ = "Mitra v%s (%s) by Ange Albertini" % (__version__, __date__)
 
 PARSERS = [
-# placeholder
-#	dummy.dummyParser,
-
 # magic at 0
-	arj.ARJparser,
-	ar.ARparser,
-	bmp.BMPparser,
-	bpg.BPGparser,
-	cpio.CPIOparser,
-	ebml.EBMLparser,
-	elf.ELFparser,
-	flac.FLACparser,
-	flv.FLVparser,
-	gif.GIFparser,
-	icc.ICCparser,
-	ico.ICOparser,
-	ilda.ILDAparser,
-	java.JAVAparser,
-	jp2.JP2parser,
-	jpg.JPGparser,
-	lnk.LNKparser,
-	id3v2.ID3V2parser,
-	nes.NESparser,
-	ogg.OGGparser,
-	pcap.PCAPparser,
-	pcapng.PCAPNGparser,
-	pe_sec.PEparser,
-	pe_hdr.PEparser,
-	png.PNGparser,
-	riff.RIFFparser,
-	svg.SVGparser,
-	tiff.TIFFparser,
-	wasm.WASMparser,
-	xz.XZparser,
+	arj,
+	ar,
+	bmp,
+	bpg,
+	cpio,
+	cab,
+	ebml,
+	elf,
+	flac,
+	flv,
+	gif,
+	icc,
+	ico,
+	ilda,
+	java,
+	jp2,
+	jpg,
+	lnk,
+	id3v2,
+	nes,
+	ogg,
+	pcap,
+	pcapng,
+	pe_hdr,
+	pe_sec,
+	png,
+	psd,
+	riff,
+	svg,
+	tiff,
+	wasm,
+	xz,
 
 # magic potentially further but checked at 0
-	_7z._7Zparser,
-	mp4.MP4parser,
-	pdf.PDFparser,
-	gzip.GZIPparser,
-	bzip2.BZ2parser,
-	postscript.PSparser,
-	zip_.ZipParser,
-	rar.RARparser,
-	rtf.RTFparser,
+	_7z,
+	mp4,
+	pdf,
+	gzip,
+	bzip2,
+	postscript,
+	zip_,
+	rar,
+	rtf,
 
 # magic further
-	dcm.DICOMparser,
-	iso.ISOparser,
-	tar.TARparser,
-	js.JSparser,
-	php.PHPparser,
+	dcm,
+	tar,
+	pdfc,
+	iso,
 
 # footer
-	id3v1.ID3V1parser,
+	id3v1,
 ]
 
 
@@ -75,7 +73,7 @@ def randbuf(length):
 
 
 def separatePayloads(fn, exts, data, swaps):
-	NoFile, SplitDir = GetArgs(["NOFILE", "SPLITDIR"])
+	NoFile, SplitDir = getVars(["NOFILE", "SPLITDIR"])
 
 	ext1, ext2 = exts
 	p1 = b""
@@ -100,7 +98,7 @@ def separatePayloads(fn, exts, data, swaps):
 
 
 def writeFile(name, exts, data, swaps = []):
-	OutDir, NoFile, Split = GetArgs(["OUTDIR", "NOFILE", "SPLIT"])
+	OutDir, NoFile, Split = getVars(["OUTDIR", "NOFILE", "SPLIT"])
 
 	random.seed(0)
 	hash = hashlib.sha256(data).hexdigest()[:8].lower()
@@ -115,14 +113,14 @@ def writeFile(name, exts, data, swaps = []):
 
 
 def isStackOk(ftype1, ftype2):
-	dprint("Stack: %s-%s" % (ftype1.type, ftype2.type))
+	dprint("Stack: %s-%s" % (ftype1.TYPE, ftype2.TYPE))
 	result = True
 	if not ftype1.bAppData:
-		dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.type))
+		dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.TYPE))
 		result = False
 
 	if ftype2.start_o == 0:
-		dprint("! File type 2 (%s) starts at offset 0 - it can't be appended." % (ftype2.type))
+		dprint("! File type 2 (%s) starts at offset 0 - it can't be appended." % (ftype2.TYPE))
 		return False
 	else:
 		len1 = len(ftype1.data)
@@ -134,17 +132,17 @@ def isStackOk(ftype1, ftype2):
 
 
 def isCavOk(ftype1, ftype2):
-	dprint("Cavity: %s_%s" % (ftype1.type, ftype2.type))
+	dprint("Cavity: %s_%s" % (ftype1.TYPE, ftype2.TYPE))
 	filling = ftype1.data
 	filling_l = len(ftype1.data)
 
 	result = True
 	if not ftype1.bAppData:
-		dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.type))
+		dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.TYPE))
 		result = False
 
 	if not ftype2.precav_s:
-		dprint("! File type 2 (%s) doesn't start with any cavity." % (ftype2.type))
+		dprint("! File type 2 (%s) doesn't have with any cavity." % (ftype2.TYPE))
 		return False
 	elif filling_l > ftype2.precav_s:
 		dprint("! File 1 is too big (0x%X). File 2's cavity is only 0x%X." % (filling_l, ftype2.precav_s) )
@@ -154,56 +152,60 @@ def isCavOk(ftype1, ftype2):
 
 
 def isParasiteOk(ftype1, ftype2):
-	dprint("Parasite: %s[%s]" % (ftype1.type, ftype2.type))
+	dprint("Parasite: %s[%s]" % (ftype1.TYPE, ftype2.TYPE))
 	result = True
 	if not ftype1.bParasite:
-		dprint("! File type 1 (%s) doesn't support parasites." % (ftype1.type))
+		dprint("! File type 1 (%s) doesn't support parasites." % (ftype1.TYPE))
 		return False
 
-	if (ftype1.parasite_o > ftype2.start_o):
-		dprint("! File type 1 (%s) can only host parasites at offset 0x%X. File 2 should start at offset 0x%X or less." % (ftype1.type, ftype1.parasite_o, ftype2.start_o) )
+	# start_o is 0 when precav_s isn't
+	if (ftype1.parasite_o > ftype2.start_o + ftype2.precav_s):
+		dprint("! File type 1 (%s) can only host parasites at offset 0x%X. File 2 should start at offset 0x%X or less." % (ftype1.TYPE, ftype1.parasite_o, ftype2.start_o) )
 		result = False
 
 	if ftype1.parasite_s < len(ftype2.data):
-		dprint("! File type 1 (%s) can accept parasites only of size 0x%X max. File 2 is too big (%X)." % (ftype1.type, ftype1.parasite_s, len(ftype2.data)) )
+		dprint("! File type 1 (%s) can accept parasites only of size 0x%X max. File 2 is too big (%X)." % (ftype1.TYPE, ftype1.parasite_s, len(ftype2.data)) )
 		result = False
 
 	return result
 
 
 def isZipperOk(ftype1, ftype2):
-	dprint("Zipper: %s^%s" % (ftype1.type, ftype2.type))
+	dprint("Zipper: %s^%s" % (ftype1.TYPE, ftype2.TYPE))
 	result = True
+	if not ftype1.bZipper:
+		dprint("! File type 1 (%s) doesn't support zippers." % (ftype1.TYPE))
+		return False
 #  if not ftype1.bAppData:
-#    dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.type))
+#    dprint("! File type 1 (%s) doesn't support appended data." % (ftype1.TYPE))
 #    result = False
 
 	if not ftype1.bParasite:
-		dprint("! File type 1 (%s) doesn't support parasites." % (ftype1.type))
+		dprint("! File type 1 (%s) doesn't support parasites." % (ftype1.TYPE))
 		return False
 
 	if not ftype2.bParasite:
-		dprint("! File type 2 (%s) doesn't support parasites." % (ftype2.type))
+		dprint("! File type 2 (%s) doesn't support parasites." % (ftype2.TYPE))
 		return False
 
 #	if ftype2.start_o != 0:
-#		dprint("! File type 2 (%s) doesn't start at offset 0." % (ftype2.type))
+#		dprint("! File type 2 (%s) doesn't start at offset 0." % (ftype2.TYPE))
 #		return False
 
 #  if (ftype1.parasite_o > ftype2.start_o):
-#    dprint("! File type 1 (%s) can only host parasites at offset 0x%X. File type 2 (%s) should start at offset 0x%X or less." % (ftype1.type, ftype1.parasite_o, ftype2.type, ftype2.start_o) )
+#    dprint("! File type 1 (%s) can only host parasites at offset 0x%X. File type 2 (%s) should start at offset 0x%X or less." % (ftype1.TYPE, ftype1.parasite_o, ftype2.TYPE, ftype2.start_o) )
 #    result = False
 
 #  if len(ftype1.data) >= ftype2.start_o:
-#    dprint("! File 1 is too big (0x%X). File type 2 (%s) should start at offset 0x%X or less." % (len(ftype1.data), ftype2.type, ftype2.start_o))
+#    dprint("! File 1 is too big (0x%X). File type 2 (%s) should start at offset 0x%X or less." % (len(ftype1.data), ftype2.TYPE, ftype2.start_o))
 #    result = False
 
 #  if ftype1.parasite_s < ftype2.parasite_o:
-#    dprint("! File type 1 (%s) can accept parasites only of size 0x%X max. File 2's pre-parasite is too big (%X)." % (ftype1.type, ftype1.parasite_s, ftype2.parasite_o) )
+#    dprint("! File type 1 (%s) can accept parasites only of size 0x%X max. File 2's pre-parasite is too big (%X)." % (ftype1.TYPE, ftype1.parasite_s, ftype2.parasite_o) )
 #    result = False
 #
 #  if ftype2.parasite_s < len(ftype1.data) - ftype1.parasite_o:
-#    dprint("! File type 2 (%s) can accept parasites only of size 0x%X max. File 1's post-parasite is too big (%X)." % (ftype2.type, ftype2.parasite_s, len(ftype1.data) - ftype2.parasite_o) )
+#    dprint("! File type 2 (%s) can accept parasites only of size 0x%X max. File 1's post-parasite is too big (%X)." % (ftype2.TYPE, ftype2.parasite_s, len(ftype1.data) - ftype2.parasite_o) )
 #    result = False
 
 	return result
@@ -211,20 +213,20 @@ def isZipperOk(ftype1, ftype2):
 
 def Hit(type1, type2):
 	global VERBOSE
-	if GetArg("VERBOSE"):
+	if getVar("VERBOSE"):
 		dprint("HIT " + ";".join(sorted([type1, type2])))
 
 def Stack(ftype1, ftype2, fn1, fn2):
 	if isStackOk(ftype1, ftype2):
-		print(("Stack: concatenation of File1 (type %s) and File2 (type %s)" % (ftype1.type, ftype2.type)))
+		print(("Stack: concatenation of File1 (type %s) and File2 (type %s)" % (ftype1.TYPE, ftype2.TYPE)))
 		# appData = ftype2.fixformat(ftype2.data, len(ftype1.data)) # alignments / padding?
 		appData = ftype2.data
 		swap_o = len(ftype1.data + 
 			ftype1.wrappend(b""))
 
-		Hit(ftype1.type, ftype2.type)
+		Hit(ftype1.TYPE, ftype2.TYPE)
 		writeFile(
-			"S(%x)-%s-%s" % (swap_o, ftype1.type, ftype2.type),
+			"S(%x)-%s-%s" % (swap_o, ftype1.TYPE, ftype2.TYPE),
 			[ext(fn2), ext(fn1)],
 			ftype1.data + 
 			ftype1.wrappend(appData),
@@ -235,51 +237,72 @@ def Stack(ftype1, ftype2, fn1, fn2):
 def Parasite(ftype1, ftype2, fn1, fn2):
 	if isParasiteOk(ftype1, ftype2):
 		print(("Parasite: hosting of File2 (type %s) in File1 (type %s)" % (
-			ftype2.type, ftype1.type)))
+			ftype2.TYPE, ftype1.TYPE)))
 		# host file may have to validate parasite contents
 		parasitized, swaps = ftype1.parasitize(ftype2)
+		if parasitized is None:
+			return
+
+		# TODO: make this for all layouts ?
+		# Optional alignment via wrappending
+		filealig = len(parasitized) % 16
+		if getVar("AESGCM") and filealig > 0:
+			# we need to know which sides wrappends
+			wrap = ftype1
+			if len(ftype2.wrappend(b"")) != 0:
+				wrap = ftype2
+
+			for i in range(17, 32):
+				aligned = parasitized + wrap.wrappend(b"\0" * i)
+				if len(aligned) % 16 == 0:
+					break
+			if wrap == ftype2:
+				swaps += [len(parasitized)] # before wrappending
+			parasitized = aligned
+
+
 		swapstr = "(%s)" % "-".join("%x" % s for s in swaps) if swaps != [] else ""
-		if parasitized is not None:
-			Hit(ftype1.type, ftype2.type)
-			writeFile(
-				"P%s-%s[%s]" % (swapstr, ftype1.type, ftype2.type),
-				[ext(fn1), ext(fn2)],
-				parasitized,
-				swaps
-			)
+		Hit(ftype1.TYPE, ftype2.TYPE)
+		writeFile(
+			"P%s-%s[%s]" % (swapstr, ftype1.TYPE, ftype2.TYPE),
+			[ext(fn1), ext(fn2)],
+			parasitized,
+			swaps
+		)
 
 
 def Zipper(ftype1, ftype2, fn1, fn2):
 	if isZipperOk(ftype1, ftype2):
-		print(("Zipper: interleaving of File1 (type %s) and File2 (type %s)" % (
-			ftype1.type, ftype2.type)))
 		# host file may have to validate parasite contents
 		# appData = ftype2.fixformat(len(ftype1.data)) # alignments / padding?
 		# parasite = ftype2.fixformat(ftype1.parasite_o)
 		zipper, swaps = ftype1.zipper(ftype2)
+		if (zipper, swaps) == (None, []):
+			return
+		print(("Zipper: interleaving of File1 (type %s) and File2 (type %s)" % (
+			ftype1.TYPE, ftype2.TYPE)))
 		swapstr = "(%s)" % "-".join("%x" % s for s in swaps) if swaps != [] else ""
-		if zipper is not None:
-			Hit(ftype1.type, ftype2.type)
-			writeFile(
-				"Z%s-%s^%s" % (swapstr, ftype1.type, ftype2.type),
-				[ext(fn1), ext(fn2)],
-				zipper,
-				swaps
-			)
+		Hit(ftype1.TYPE, ftype2.TYPE)
+		writeFile(
+			"Z%s-%s^%s" % (swapstr, ftype1.TYPE, ftype2.TYPE),
+			[ext(fn1), ext(fn2)],
+			zipper,
+			swaps
+		)
 
 
 def Cavity(ftype1, ftype2, fn1, fn2):
 	if isCavOk(ftype1, ftype2):
-		print(("Cavity: File1 (type %s) into File2 (type %s)" % (ftype1.type, ftype2.type)))
+		print(("Cavity: File1 (type %s) into File2 (type %s)" % (ftype1.TYPE, ftype2.TYPE)))
 
-		# missing normalization ?
+		# TODO: requires any normalization ?
 		filling = ftype1.data
 		filling_l = len(filling + ftype1.wrappend(b"")) # FIXME: variable length not supported
 		filled = filling + ftype1.wrappend(ftype2.data[filling_l:])
 		swap = filling_l
-		Hit(ftype1.type, ftype2.type)
+		Hit(ftype1.TYPE, ftype2.TYPE)
 		writeFile(
-			"C(%x)-%s-%s" % (swap, ftype1.type, ftype2.type),
+			"C(%x)-%s-%s" % (swap, ftype1.TYPE, ftype2.TYPE),
 			[ext(fn2), ext(fn1)],
 			filled,
 			[swap]
@@ -304,14 +327,16 @@ def main():
 	with open(fn2, "rb") as f:
 		fdata2 = f.read()
 
-	pad = GetArg("PAD")
+	pad = getVar("PAD")
 	fdata1 += b"\1" * (pad - len(fdata1))
 	fdata2 += b"\1" * (pad - len(fdata2))
+
 
 	ftype1 = None
 	ftype2 = None
 
-	for ftype in PARSERS:
+	for parser in PARSERS:
+		ftype = parser.parser
 		f = ftype(fdata1)
 		if f.identify():
 			ftype1 = f
@@ -319,16 +344,30 @@ def main():
 		if f.identify():
 			ftype2 = f
 
-	print("File type 1: %s" % ftype1.type)
-	print("File type 2: %s" % ftype2.type)
+	print("%s" % fn1)
+	if ftype1 is None:
+			print("ERROR: Unknown type file 1 - aborting.")
+			sys.exit()
+	print("File 1: %s" % ftype1.DESC)
+
+	print("%s" % fn2)
+	if ftype2 is None:
+		if getVar("FORCE"):
+			ftype2 = blob.reader(fdata2)
+		else:
+			print("ERROR: Unknown type file 2 (try -f ?) - aborting.")
+			sys.exit()
+
+	print("File 2: %s" % ftype2.DESC)
 	print("")
 
-	if ftype1.type == ftype2.type:
-		print("Same file types - aborting.")
+	if ftype1.TYPE == ftype2.TYPE:
+		print("ERROR: Same file types - aborting.")
 		sys.exit()
 
+
 	DoAll(ftype1, ftype2, fn1, fn2)
-	if GetArg("REVERSE"):
+	if getVar("REVERSE"):
 		dprint("REVERSE: Switching files order")
 		dprint("")
 		DoAll(ftype2, ftype1, fn2, fn1)

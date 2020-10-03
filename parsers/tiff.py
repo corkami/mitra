@@ -25,7 +25,12 @@ Lengths = {
 	RATIONAL	:8,
 }
 
-class TIFFparser(FType):
+class parser(FType):
+	DESC = "TIFF / Tagged Image File Format"
+	TYPE = "TIFF"
+	MAGICb = b"MM\0\x2a"
+	MAGICl = b"II\x2a\0"
+
 	# pointer to the first IFD
 	ifdptr_o = 4
 	ifdptr_s = 4
@@ -37,7 +42,6 @@ class TIFFparser(FType):
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "TIFF"
 
 		self.bParasite = True
 		self.parasite_o = self.data_o
@@ -50,9 +54,9 @@ class TIFFparser(FType):
 	def identify(self):
 		d = self.data
 
-		if d.startswith(b"MM\0\x2a"):
+		if d.startswith(self.MAGICb):
 			self.endianness = BIG
-		elif d.startswith(b"II\x2a\0"):
+		elif d.startswith(self.MAGICl):
 			self.endianness = LITTLE
 		else:
 			return False

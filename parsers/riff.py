@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-# RIFF Resource Interchange File Format
-
 from parsers import FType
 from helpers import *
 
 
-class RIFFparser(FType):
+class parser(FType):
+	DESC = "RIFF / Resource Interchange File Format [container]"
+	TYPE = "RIFF"
 	MAGICl = b"RIFF"
 	MAGICb = b"RIFX"
+	WEBPTYPE = b"WEBP"
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "RIFF"
 
 		self.bParasite = True
 		self.parasite_o = 12
@@ -27,7 +27,7 @@ class RIFFparser(FType):
 		d = self.data
 
 		# WebP doesn't follow the full RIFF structure
-		if d[8:8+4] == b"WEBP":
+		if d[8:8+4] == self.WEBPTYPE:
 			return False
 
 		if d.startswith(self.MAGICb):

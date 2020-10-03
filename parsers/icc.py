@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-# International Color Consortium profiles
-
 from parsers import FType
 from helpers import *
 
 
-class ICCparser(FType):
+class parser(FType):
+	DESC = "ICC / International Color Consortium profiles"
+	TYPE = "ICC"
+	MAGIC = b"acsp"
+
 	size_o = 0
 	size_s = 4
 
@@ -21,7 +23,6 @@ class ICCparser(FType):
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ICC"
 
 		self.bParasite = True
 		self.parasite_o = self.tagcount_o + self.tagcount_s
@@ -32,7 +33,7 @@ class ICCparser(FType):
 
 
 	def identify(self):
-		if self.data[self.sig_o:self.sig_o+self.sig_s] != b"acsp":
+		if self.data[self.sig_o:self.sig_o+self.sig_s] != self.MAGIC:
 			return False
 
 		d = self.data

@@ -5,14 +5,17 @@ import zipfile
 import os
 from parsers import FType
 
-class ZipParser(FType):
+class parser(FType):
+	DESC = "Zip"
+	TYPE = "Zip"
+	MAGIC = b"PK\3\4"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Zip"
 
 		self.bParasite = True
-		self.parasite_o = 0x1E
+		self.parasite_o = 0x1E # depends on archived file name
 		self.parasite_s = 0xffffff # ?
 
 		self.start_o = 4*1024*1024 # no actual downward limit
@@ -23,7 +26,7 @@ class ZipParser(FType):
 
 
 	def identify(self):
-		return self.data.startswith(b"PK\3\4") # totally incomplete
+		return self.data.startswith(self.MAGIC) # totally incomplete
 
 
 	def parasitize(self, fparasite):
@@ -46,4 +49,5 @@ class ZipParser(FType):
 						contents = zf.open(n).read()
 						final.writestr(zf.getinfo(n), contents, compress_type=zipfile.ZIP_DEFLATED)
 
-		return hFinal.getvalue(), [] # TODO:swaps
+		swaps = [0x1e, 0x1e + len(fparasite.data)]
+		return hFinal.getvalue(), swaps

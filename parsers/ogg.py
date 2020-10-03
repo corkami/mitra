@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# Ogg container (transport bitstream)
-
-
 from parsers import FType
 from helpers import *
 
@@ -80,11 +77,14 @@ def crc32ogg(d):
 	return val
 
 
-class OGGparser(FType):
+class parser(FType):
+	DESC = "Ogg [container]"
+	TYPE = "OGG"
+	MAGIC = b"OggS"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Ogg"
 
 		self.bAppData = True
 
@@ -93,18 +93,23 @@ class OGGparser(FType):
 		self.parasite_s = 0xFFFF # up to FF segments of FF length
 
 		self.cut = 0 # it also works at the top of the file
-		self.prewrap = 0x1c # depends on the length of the parasite
+		self.prewrap = 0x1c
 		self.postwrap = 0
-
-
-	def identify(self):
-		return self.data.startswith(b"OggS")
 
 
 	def getCut(self):
 		# lazy way to find the 2nd page
 		self.cut = self.data[1:].find(b"OggS") + 1
 		return self.cut
+
+
+	def getPrewrap(self, parasite_s):
+		parasite__ = b"\0" * parasite_s
+		wrapped = self.wrap(parasite__)
+		delta = len(wrapped) - parasite_s
+
+		self.prewrap = delta
+		return delta
 
 
 	def wrap(self, data, id=b"junk"):

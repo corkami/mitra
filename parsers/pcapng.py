@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-# Packet Capture Next Generation
-
 from parsers import FType
-import struct
+from helpers import int4l
 
-class PCAPNGparser(FType):
+class parser(FType):
+	DESC = "Packet Capture Next Generation"
+	TYPE = "PCAPNG"
+	MAGIC = b"\x0a\x0d\x0d\x0a"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "PCAPNG"
 		self.bAppData = False # end wrapping possible but with postwrapping
 
 		self.bParasite = True
@@ -21,10 +22,6 @@ class PCAPNGparser(FType):
 		self.postwrap = 4
 
 
-	def identify(self):
-		return self.data.startswith(b"\x0a\x0d\x0d\x0a")
-
-
 	def fixparasite(self, parasite):
 		# dword padding
 		if len(parasite) % 4 > 0:
@@ -33,7 +30,7 @@ class PCAPNGparser(FType):
 
 
 	def wrap(self, parasite):
-		l = struct.pack("<I", len(parasite) + 4*4)
+		l = int4l(len(parasite) + 4*4)
 
 		wrapped = b"".join([
 			b"\xAD\x0B\0\x40", # non-copied custom block

@@ -2,11 +2,13 @@
 
 from parsers import FType
 
-class ISOparser(FType):
+class parser(FType):
+	DESC = "ISO 9660 image [dump]"
+	TYPE = "ISO"
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "ISO"
 
 		self.bParasite = False # no parasiting yet. Would be trivial.
 

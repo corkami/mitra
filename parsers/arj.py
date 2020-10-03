@@ -3,16 +3,15 @@
 from parsers import FType
 
 
-class ARJparser(FType):
+class parser(FType):
+	DESC = "Arj / Archived by Robert Jung"
+	TYPE = "Arj"
+	MAGIC = bytes([0x60, 0xEA])
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "Arj"
 
 		self.bParasite = False
 
 		self.start_o = 128*1024 # with WinRar
-
-
-	def identify(self):
-		return self.data.startswith(bytes([0x60, 0xEA]))

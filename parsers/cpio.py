@@ -9,16 +9,17 @@ from parsers import FType
 from helpers import *
 
 
-class CPIOparser(FType):
-	magic = b"\xc7\x71" # 070707o
-	hdr_s = 0x1A
+class parser(FType):
+	DESC = "CPIO"
+	TYPE = "CPIO"
+	MAGIC = b"\xc7\x71" # 070707o
+	HDR_s = 0x1A
 
 	trailer = b"TRAILER!!!"
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "CPIO"
 
 		self.bParasite = True
 		self.parasite_s = 0xffffffff # ?
@@ -28,17 +29,13 @@ class CPIOparser(FType):
 		self.start_o = 0 # will actually skip forward with a warning...
 		self.cut = 0
 
-		self.parasite_o = self.hdr_s
-		self.prewrap = self.hdr_s
-
-
-	def identify(self):
-		return self.data.startswith(self.magic)
+		self.parasite_o = self.HDR_s
+		self.prewrap = self.HDR_s
 
 
 	def makeHdr(self, filename, data):
 		hdr = b"".join([
-			self.magic,
+			self.MAGIC,
 			b"\0\0", # device
 			b"\0\0", # inode
 			b"\0\0", # permissions
@@ -70,6 +67,7 @@ class CPIOparser(FType):
 
 		assert len(d) % 512 == 0
 		return d
+
 
 	def wrap(self, data):
 		return self.makeHdr(b"", data)

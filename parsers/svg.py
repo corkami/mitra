@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-# Scalable Vector Graphics (xml-based)
-
 from parsers import FType
 
-class SVGparser(FType):
+class parser(FType):
+	DESC = "SVG / Scalable Vector Graphics"
+	TYPE = "SVG"
+	MAGIC = b"<svg "
+
 	def __init__(self, data=""):
 		FType.__init__(self, data)
 		self.data = data
-		self.type = "SVG"
 
 		# disabled because some tools are unhappy with binary in XML comments
 		self.bParasite = False
@@ -16,10 +17,6 @@ class SVGparser(FType):
 
 		self.parasite_o = 0x80 # rough average...
 		self.parasite_s = 0xFFFFFFFF
-
-
-	def identify(self):
-		return self.data.startswith(b"<svg ")
 
 
 	def parasitize(self, fparasite):
