@@ -1,0 +1,2 @@
+BitVector==3.4.9
+pycryptodome==3.9.7
