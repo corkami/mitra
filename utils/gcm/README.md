@@ -8,7 +8,7 @@ It currently doesn't identify any file format, so it's not able to:
 - determine which block to use for bruteforcing - you might just want to append data if both file formats are supporting it.
 - fix checksums that will be invalid when the other plaintext ranges are decrypted with the foreign key (TAR, ZIP, PNG...).
 
-Some of the available examples have been manually post-processed to fix these issues.
+Some of the [available examples](examples/) have been manually post-processed to fix these issues.
 
 
 # How to
