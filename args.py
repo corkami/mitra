@@ -10,7 +10,7 @@ ARGS = {
 	"OUTDIR"  : "",
 	"NOFILE"  : False,
 	"PAD"     : 0 * 1024, # FTR: 128b DICOM / 1024 kb PDF / 32Kb ISO
-	"AESGCM"  : True,
+	"AESGCM"  : False,
 }
 
 
