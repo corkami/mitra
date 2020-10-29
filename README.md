@@ -9,6 +9,11 @@ Pronounced `mɪtrə`.
 
 [What's new](NEWS.md).
 
+## Install
+
+Install MuPDF (you need mutool on the command line to create normalized PDFs)
+
+
 ## How to use
 
 `mitra.py file1.png file2.dcm` gives you a working PNG/DICOM polyglot.
