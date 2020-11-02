@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # JP2: 'MP4'-based but:
 #  - no relocation needed

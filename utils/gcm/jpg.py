@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # a JPG image crypto-polyglot generator for GCM
 

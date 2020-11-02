@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # strategy: attach a file, maybe change elements order, skip mimetype 
 # TODO: experiment with ebmlite and XML editing

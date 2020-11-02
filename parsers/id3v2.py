@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # MP3 (with an ID3v2.3/4 header)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # https://github.com/dsnet/compress/blob/master/doc/bzip2-format.pdf
 

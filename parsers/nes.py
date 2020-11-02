@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # iNES rom format
 
@@ -12,7 +12,7 @@ from parsers import FType
 
 
 class parser(FType):
-	DESC = "iNES"
+	DESC = "iNES rom"
 	TYPE = "NES"
 	MAGIC = b"NES\x1a"
 	TRAINER_o = 16

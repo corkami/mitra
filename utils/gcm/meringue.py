@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Take a polyglot from mitra, Generate a GCM ciphertext which decrypts correctly under two different keys

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # https://wiki.wireshark.org/Development/LibpcapFileFormat#Packet_Data
 # A PCAP is just a sequence of packets after a fixed size header
