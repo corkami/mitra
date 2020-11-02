@@ -32,7 +32,7 @@ A valid PDF/MP4 polyglot is generated, named (in our case, depending on your act
 Then, generate the ciphertext from that file:
 
 ```
-$ exploit.py "P(8-1ea)-MP4[PDF].54fdf8e6.mp4.pdf" mp4-pdf.gcm
+$ meringue.py "P(8-1ea)-MP4[PDF].54fdf8e6.mp4.pdf" mp4-pdf.gcm
 key 1: Now?
 key 2: L4t3r!!!
 ad   : MyVoiceIsMyPass!
@@ -101,7 +101,7 @@ Z(0-6-a-208c-21af-21b3-2203).jpg.jpg
 
 Which can then be exploited with the same keys and the bruteforced nonce (JPG supports appended data, so the default `-1` value is a valid block index):
 ```
-exploit.py -n 8108314280 "Z(0-6-a-208c-21af-21b3-2203).jpg.jpg" jpg-jpg.gcm
+meringue.py -n 8108314280 "Z(0-6-a-208c-21af-21b3-2203).jpg.jpg" jpg-jpg.gcm
 key 1: Now?
 key 2: L4t3r!!!
 ad   : MyVoiceIsMyPass!

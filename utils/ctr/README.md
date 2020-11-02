@@ -31,7 +31,7 @@ A valid GZip/RAR polyglot is generated, named (in our case, depending on your ac
 Then, generate the ciphertext from that file:
 
 ```
-$ exploit.py "S(24)-GZ-RAR.a7bccab6.rar.gz" gzip-rar4.ctr
+$ brioche.py "S(24)-GZ-RAR.a7bccab6.rar.gz" gzip-rar4.ctr
 Generated output: gzip-rar4.ctr
 Tests:
  openssl enc -in gzip-rar4.ctr -out output1.rar -aes-128-ctr -iv 0 -K 4e6f773f
