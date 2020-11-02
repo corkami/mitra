@@ -17,6 +17,9 @@ Check Corkami [mini](https://github.com/corkami/pocs/tree/master/mini)
 or [tiny](https://github.com/corkami/pocs/tree/master/tiny) PoCs for input files.
 and the formats [repository](https://github.com/corkami/formats/tree/WIP) for some extra technical info.
 
+Some parsers rely on extra software:
+- PDF: `mutool` from [MuPDF](https://www.mupdf.com/docs/index.html).
+
 
 # Features
 

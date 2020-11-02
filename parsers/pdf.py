@@ -117,7 +117,9 @@ class parser(FType):
 			f.write(self.data)
 
 		# merging with a dummy page (mutool)
-		os.system(mutool + ' merge -o merged.pdf blank.pdf host.pdf')
+		rval = os.system(mutool + ' merge -o merged.pdf blank.pdf host.pdf')
+		if rval != 0:
+			print("Error. Is mutool installed?")
 		os.remove('host.pdf')
 
 		with open("merged.pdf", "rb") as f:
