@@ -4,19 +4,19 @@
 
 # Ange Albertini 2020
 
+import fitz
 
 import os
 import random
 import sys
+
 from string import punctuation, digits, ascii_letters
-
-mutool = "wine ~/mutool.exe"
-mutool = "mutool"
-
 
 # number of blocks to be appended to the PE inside the PDF
 BLOCKCOUNT = 2
 
+
+random.seed(31415)
 def randblock(l):
 	return bytes([random.randrange(255) for i in range(l)])
 
@@ -32,7 +32,7 @@ def hexii(c):
 			return b"  "
 		#replace printable char by .<char>
 		if c in ASCII:
-			return bytes([c]) + b" "
+			return b" " + bytes([c])
 		if c == 0x0a:
 			return b"\n"
 		if c == b"\r":
@@ -93,9 +93,6 @@ def splitfile(data, cuts):
 		p1, p2 = p2, p1
 
 	return p1, p2
-
-
-random.seed(31415)
 
 
 
@@ -178,6 +175,28 @@ endobj
 endobj
 """
 
+# a compact dummy PDF declaring an empty page
+dummy = b"""%PDF-1.5
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Kids[3 0 R]/Type/Pages/Count 1>>endobj
+3 0 obj<</Type/Page/Contents 4 0 R>>endobj
+4 0 obj<<>>endobj
+
+xref
+0 5
+0000000000 65536 f 
+0000000009 00000 n 
+0000000052 00000 n 
+0000000101 00000 n 
+0000000143 00000 n 
+
+trailer<</Size 5/Root 1 0 R>>
+
+startxref
+163
+%%EOF
+"""
+
 
 
 # Main functions ###############################################################
@@ -189,24 +208,15 @@ if len(sys.argv) == 1:
 
 
 
-print(" * merging host with a dummy page (mutool)") ############################
+print(" * merging host with a dummy page") #####################################
 
-tiny = b"\n".join([
-	b"%PDF-1.3",
-	b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj",
-	b"2 0 obj<</Kids[3 0 R]/Type/Pages>>endobj",
-	b"3 0 obj<</Type/Page/Contents 4 0 R>>endobj",
-	b"4 0 obj<<>>endobj",
-	b"trailer<</Size 5/Root 1 0 R>>",
-])
+with fitz.open() as mergedDoc:
+  with fitz.open("pdf", dummy) as dummyDoc:
+    mergedDoc.insertPDF(dummyDoc)
 
-with open("_dummy.pdf", "wb") as f:
-	f.write(tiny)
-
-os.system(mutool + ' merge -o _merged.pdf _dummy.pdf %s' % (sys.argv[1]))
-
-with open("_merged.pdf", "rb") as f:
-	dm = f.read()
+  with fitz.open(sys.argv[1]) as inDoc:
+    mergedDoc.insertPDF(inDoc)
+  dm = mergedDoc.write()
 
 
 
@@ -215,7 +225,7 @@ count = getCount(dm) - 1
 
 kids = EnclosedString(dm, b"/Kids[", b"]")
 
-# we skip the first dummy that should be 4 0 R because of `mutool merge`
+# we skip the first dummy that should be 4 0 R because of merge
 REF = b"4 0 R "
 assert kids.startswith(REF)
 kids = kids[len(REF):]
@@ -229,12 +239,12 @@ dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
 
 
 
-print(" * normalizing parasite (mutool)") ######################################
+print(" * normalizing parasite") ###############################################
 
-os.system(mutool + ' merge -o _normalized.pdf %s' % (sys.argv[2]))
-
-with open("_normalized.pdf", "rb") as f:
-	para = f.read()
+with fitz.open() as mergedDoc:
+  with fitz.open(sys.argv[2]) as inDoc:
+    mergedDoc.insertPDF(inDoc)
+  para = mergedDoc.write()
 
 para += b"\0" * (16 + (16 - (len(para) % 16)))
 
@@ -246,9 +256,9 @@ para_cuts += [para.find(b"\n1 0 obj\n<<") + 1]
 para_cuts += [para.find(b"\n\nxref\n0 ", para_cuts[0]) + 1]
 para_cuts += [para.find(b"\nstartxref\n", para_cuts[1]) + 1]
 
-print(" parasite cuts:")
+print("  parasite cuts:")
 for _c in para_cuts:
-	print("  %08x> %s" % (_c, showsplit(para, _c)))
+	print("   %08x> %s" % (_c, showsplit(para, _c)))
 
 # helps PDFjs to parse successfully
 # cf https://mozilla.github.io/pdf.js/web/viewer.html
@@ -285,26 +295,22 @@ cuts += [len(contents)]
 
 contents += fakestartxref
 
-with open("_parasited.pdf", "wb") as f:
-	f.write(contents)
-
 
 
 print(" * splitting & fixing payloads") ########################################
 # by splitting, adjusting and merging, we can adjust xrefs easily.
 
-print(" polyglot cuts:")
+print("  polyglot cuts:")
 for _c in cuts:
-	print("  %08x> %s" % (_c, showsplit(contents, _c)))
+	print("   %08x> %s" % (_c, showsplit(contents, _c)))
 
 pdf1, pdf2 = splitfile(contents, cuts)
-with open("_split1.pdf", "wb") as f: f.write(pdf1)
-with open("_split2.pdf", "wb") as f: f.write(pdf2)
 
 pdf1 = adjustPDF(pdf1)
 pdf2 = adjustPDF(pdf2)
-with open("_payload1.pdf", "wb") as f: f.write(pdf1)
-with open("_payload2.pdf", "wb") as f: f.write(pdf2)
+if 0:
+	with open("_payload1.pdf", "wb") as f: f.write(pdf1)
+	with open("_payload2.pdf", "wb") as f: f.write(pdf2)
 
 
 
@@ -317,20 +323,11 @@ offsets_s = repr(b"-".join([b"%x" % i for i in cuts]))[2:-1]
 with open("Z(%s).pdf.pdf" % offsets_s, "wb") as f:
 	f.write(final)
 
-
-
-print(" * cleaning up temporary files") ########################################
-for fn in [
-	'dummy',
-	'merged',
-	'normalized',
-	'parasited',
-	'split1', 'split2',
-	# adjusted separated plaintexts
-#	'payload1', 'payload2',
-]:
-	if 1: os.remove("_%s.pdf" % fn)
-
+for i in range(6):
+	WIDTH = 16
+	l = WIDTH - 1
+	s = i*(WIDTH)
+	print("   %08x: %s" % (s, hexiis(final[s:s+l])))
 
 
 print("Success!") # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

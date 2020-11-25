@@ -4,20 +4,16 @@
 
 # Ange Albertini 2020
 
-
-# reminder for meringue:
-#  with default keys and SumatraPDF18fixed.exe: -i 135488 -n 59334
+import fitz # PyMuPDF
 
 import os
 import sys
 
-mutool = "wine ~/mutool.exe"
-mutool = "mutool"
 
 # number of blocks to be appended to the PE inside the PDF
 BLOCKCOUNT = 2
 
-# PDF functions ###############################################################
+# PDF functions ################################################################
 
 def EnclosedString(d, starts, ends):
   off = d.find(starts) + len(starts)
@@ -94,7 +90,30 @@ endobj
 """
 
 
-# Main functions ##############################################################
+# a compact dummy PDF declaring an empty page
+dummy = b"""%PDF-1.5
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Kids[3 0 R]/Type/Pages/Count 1>>endobj
+3 0 obj<</Type/Page/Contents 4 0 R>>endobj
+4 0 obj<<>>endobj
+
+xref
+0 5
+0000000000 65536 f 
+0000000009 00000 n 
+0000000052 00000 n 
+0000000101 00000 n 
+0000000143 00000 n 
+
+trailer<</Size 5/Root 1 0 R>>
+
+startxref
+163
+%%EOF
+"""
+
+
+# Main functions ###############################################################
 
 if len(sys.argv) == 1:
   print("PDF-PE GCM collider")
@@ -112,29 +131,34 @@ pe = pe[0x33:] # aligning things
 lenPE = len(pe) - 46 # minimal PDF header length
 
 
-print(" * merging with a dummy page (mutool)")
-os.system(mutool + ' merge -o merged.pdf dummy.pdf %s' % (sys.argv[1]))
+print(" * normalizing, merging with a dummy page") #############################
+with fitz.open() as mergedDoc:
+  with fitz.open("pdf", dummy) as dummyDoc:
+    mergedDoc.insertPDF(dummyDoc)
 
-with open("merged.pdf", "rb") as f:
-  dm = f.read()
+  with fitz.open(sys.argv[1]) as inDoc:
+    mergedDoc.insertPDF(inDoc)
+  dm = mergedDoc.write()
 
 
-print(" * removing dummy page reference")
+print(" * removing dummy page reference") ######################################
 count = getCount(dm) - 1
 
 kids = EnclosedString(dm, b"/Kids[", b"]")
 
-# we skip the first dummy that should be 4 0 R because of the `mutool merge`
-assert kids.startswith(b"4 0 R ")
-kids = kids[6:]
+# we skip the first dummy that should be 4 0 R because of the merge
+RefObj4 = b"4 0 R "
+assert kids.startswith(RefObj4)
+kids = kids[len(RefObj4):]
 
 
-print(" * fixing object references")
+print(" * fixing object references") ###########################################
 dm = dm[dm.find(b"5 0 obj"):]
 dm = dm.replace(b"/Parent 2 0 R", b"/Parent 4 0 R")
 dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
 
-print(" * aligning PE header")
+
+print(" * aligning PE header") #################################################
 mapping = {}
 for s in ("lenPE", "pe", "count", "kids"):
   mapping[s.encode()] = locals()[s]
@@ -151,36 +175,30 @@ mapping[b"lenPE"] = lenPE
 contents = (template % mapping) + dm
 contents = adjustPDF(contents)
 
-with open("hacked.pdf", "wb") as f:
-  f.write(contents)
 
+print(" * finalizing main PDF") ################################################
+# let's adjust offsets - using garbage=1 because object 2 is not required
+with fitz.open("pdf", contents) as hackedDoc:
+  cleaned = hackedDoc.write(garbage=1)
 
-print(" * finalizing main PDF (mutool)")
-# let's adjust offsets - using -g because object 2 is not required
-os.system(mutool + ' clean -g hacked.pdf cleaned.pdf')
-
-with open("cleaned.pdf", "rb") as f:
-  cleaned = f.read()
 cleaned = b"M" + b"Z" + cleaned[2:]
 
 # Not always needed - most PE are aligned
 # print(" * adding extra block")
 # cleaned += randblock(16 + (16 - (len(cleaned) % 16)))
 
+
+print(" * generating polyglot") ################################################
+
 offsets = [2,
   cleaned.find(b"\nstream\n") + len(b"\nstream\n"),
   cleaned.find(b"\nendstream")]
-
-print(" * generating polyglot")
 offsets_s = repr(b"-".join([b"%x" % i for i in offsets]))[2:-1]
 with open("Z(%s).exe.pdf" % offsets_s, "wb") as f:
   f.write(cleaned)
 
 print("Success!")
 
-print(" * cleaning up temporary files")
-os.remove('merged.pdf')
-os.remove('hacked.pdf')
-os.remove('cleaned.pdf')
-
 print()
+
+sys.exit() #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
