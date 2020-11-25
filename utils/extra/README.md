@@ -15,7 +15,8 @@ Polyglot generators that exceed Mitra limitations
  * aligning PE header
  * finalizing main PDF
  * generating polyglot
-Success!```
+Success!
+```
 
 
 ## Craft ciphertext
