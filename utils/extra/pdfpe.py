@@ -7,8 +7,10 @@
 import fitz # PyMuPDF
 
 import os
+import re
 import sys
 
+_DEBUG = 0
 
 # number of blocks to be appended to the PE inside the PDF
 BLOCKCOUNT = 2
@@ -19,10 +21,43 @@ def EnclosedString(d, starts, ends):
   off = d.find(starts) + len(starts)
   return d[off:d.find(ends, off)]
 
+
 def getCount(d):
   s = EnclosedString(d, b"/Count ", b"/")
   count = int(s)
   return count
+
+
+def getObjDecl(d, s):
+  val = EnclosedString(d, s, b"0 R")
+  val = val.strip()
+  if val.decode().isnumeric():
+    return b"%s %s 0 R" % (s, val)
+  else:
+    return b""
+
+
+def getValDecl(d, s):
+  """locates declaration such as '/PageMode /UseOutlines' """
+  off = d.find(s) + len(s)
+  if off == -1:
+    return b""
+  match = re.match(b" *\/[A-Za-z0-9]*", d[off:])
+  if match is None:
+    return b""
+  else:
+    return b"%s %s" % (s, match[0])
+
+
+def adjustToC(toc):
+  """increasing page numbers of each ToC entry"""
+  for entry in toc:
+    d = entry[3]
+    if d["kind"] == 1:
+      d["page"] += 1
+      entry[2] += 1
+  return toc
+
 
 def adjustPDF(contents):
   startXREF = contents.find(b"\nxref\n0 ") + 1
@@ -68,24 +103,29 @@ template = b"""%%PDF-1.3
 1 0 obj
 <</Length 2 0 R>>
 stream
-%(pe)s
+%(payload)s
 endstream
 endobj
 
 2 0 obj
-%(lenPE)i
+%(payload_l)i
 endobj
 
 3 0 obj
 <<
   /Type /Catalog
   /Pages 4 0 R
-  /Dummy 1 0 R %% to prevent object 1 from being discarded
+  /Payload 1 0 R %% to prevent garbage collection
+  %(extra)s %% optional: Names + OpenAction + Outlines + PageMode
 >>
 endobj
 
 4 0 obj
-<</Type/Pages/Count %(count)i/Kids[%(kids)s]>>
+<<
+  /Type/Pages
+  /Count %(count)i
+  /Kids [%(kids)s]
+>>
 endobj
 """
 
@@ -121,30 +161,47 @@ if len(sys.argv) == 1:
   sys.exit()
 
 with open(sys.argv[2], "rb") as f:
-  pe = f.read()
+  payload = f.read()
 
 # for tag correcting and tag setting
-pe += b"\0" * 16 * BLOCKCOUNT
+payload += b"\0" * 16 * BLOCKCOUNT
 
-assert pe.startswith(b"MZ")
-pe = pe[0x33:] # aligning things
-lenPE = len(pe) - 46 # minimal PDF header length
+assert payload.startswith(b"MZ")
+payload = payload[0x33:] # aligning things
+payload_l = len(payload) - 46 # minimal PDF header length
 
 
 print(" * normalizing, merging with a dummy page") #############################
+
 with fitz.open() as mergedDoc:
   with fitz.open("pdf", dummy) as dummyDoc:
     mergedDoc.insertPDF(dummyDoc)
 
   with fitz.open(sys.argv[1]) as inDoc:
+    if _DEBUG: inDoc.save("_0normalized.pdf")
+
+    pagemode = getValDecl(inDoc.write(), b"/PageMode")
+
+    toc = inDoc.getToC(simple=False)
+    toc = adjustToC(toc)
+
     mergedDoc.insertPDF(inDoc)
+
+  mergedDoc.setToC(toc)
   dm = mergedDoc.write()
+  if _DEBUG: mergedDoc.save("_1merged.pdf")
 
 
 print(" * removing dummy page reference") ######################################
 count = getCount(dm) - 1
 
 kids = EnclosedString(dm, b"/Kids[", b"]")
+
+outlines = getObjDecl(dm, b"/Outlines")
+names = getObjDecl(dm, b"/Names")
+openaction = getObjDecl(dm, b"/OpenAction")
+
+extra = outlines + names + openaction + pagemode
 
 # we skip the first dummy that should be 4 0 R because of the merge
 RefObj4 = b"4 0 R "
@@ -160,7 +217,13 @@ dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
 
 print(" * aligning PE header") #################################################
 mapping = {}
-for s in ("lenPE", "pe", "count", "kids"):
+for s in (
+  "payload",
+  "payload_l",
+  "count",
+  "kids",
+  "extra",
+  ):
   mapping[s.encode()] = locals()[s]
 
 # aligning payload header
@@ -168,12 +231,15 @@ stage1 = template % mapping
 
 streamOffset = stage1.find(b"stream\n") + len(b"stream\n")
 
-pe = pe[streamOffset:]
-lenPE = len(pe) 
+payload = payload[streamOffset:]
+payload_l = len(payload) 
 
-mapping[b"lenPE"] = lenPE
+mapping[b"payload_l"] = payload_l
 contents = (template % mapping) + dm
 contents = adjustPDF(contents)
+if _DEBUG:
+  with open("_2hacked.pdf", "wb") as f:
+    f.write(contents)
 
 
 print(" * finalizing main PDF") ################################################
@@ -181,7 +247,6 @@ print(" * finalizing main PDF") ################################################
 with fitz.open("pdf", contents) as hackedDoc:
   cleaned = hackedDoc.write(garbage=1)
 
-cleaned = b"M" + b"Z" + cleaned[2:]
 
 # Not always needed - most PE are aligned
 # print(" * adding extra block")
@@ -194,11 +259,19 @@ offsets = [2,
   cleaned.find(b"\nstream\n") + len(b"\nstream\n"),
   cleaned.find(b"\nendstream")]
 offsets_s = repr(b"-".join([b"%x" % i for i in offsets]))[2:-1]
+
+if not _DEBUG:
+  cleaned = b"M" + b"Z" + cleaned[2:]
+
 with open("Z(%s).exe.pdf" % offsets_s, "wb") as f:
   f.write(cleaned)
 
-print("Success!")
+if _DEBUG:
+  cleaned = b"M" + b"Z" + cleaned[2:]
+  with open("Z(%s).exe" % offsets_s, "wb") as f:
+    f.write(cleaned)
 
+print("Success!")
 print()
 
 sys.exit() #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

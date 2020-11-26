@@ -1,12 +1,11 @@
-Polyglot generators that exceed Mitra limitations
-(ex: same file types, nonce overlap).
+This directory contains polyglot generators that don't match Mitra requirement (such as different file types or no overlap).
 
 
 # PDF/PE polyglot with signature overlap
 
 ## Merge PDF and PE
 
-`pdfpe.py paper.pdf SumatraPDF18fixed.exe`:
+`python pdfpe.py paper.pdf SumatraPDF18fixed.exe`:
 
 ```
  * normalizing, merging with a dummy page
@@ -24,9 +23,7 @@ Success!
 The block index depends on the PE.
 The nonce is bruteforced according to the keys.
 
-The nonce was 
-
-`../gcm/meringue.py -i 135488 -n 59334 'Z(2-33-211420).exe.pdf' test.gcm`:
+`python ../gcm/meringue.py -i 135488 -n 59334 "Z(2-33-211420).exe.pdf" test.gcm`:
 
 ```
 key 1: Now?
@@ -41,7 +38,8 @@ Coef to be inverted: 78a9f0686e9b7972252c8ca3796e3100 (already computed)
 
 ## Decrypt and test
 
-`../gcm/test.py test.gcm`:
+`python ../gcm/decrypt.py test.gcm`:
+
 ```
 key1: b'Now?'
 key1: b'L4t3r!!!'
@@ -65,7 +63,7 @@ plaintext2: b'255044462d312e330a25c2b5c2b60a0a' ...
 
 ## Merge PDFs
 
-`pdfpdf.py host.pdf parasite.pdf`:
+`python pdfpdf.py host.pdf parasite.pdf`:
 
 ```
  * merging host with a dummy page
@@ -95,7 +93,7 @@ Success!
 
 ## Craft ciphertext
 
-`../gcm/meringue.py "Z(30-48880-53640).pdf.pdf" pdfpdf.gcm`:
+`python ../gcm/meringue.py "Z(30-48880-53640).pdf.pdf" pdfpdf.gcm`:
 
 ```
 key 1: Now?
@@ -110,7 +108,7 @@ Coef to be inverted: 4494a66081751930eed248b6fd11c74e (already computed)
 
 ## Decrypt and test
 
-`../gcm/test.py pdfpdf.gcm`:
+`python ../gcm/decrypt.py pdfpdf.gcm`:
 
 ```
 key1: b'Now?'
