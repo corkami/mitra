@@ -6,198 +6,16 @@
 
 import fitz
 
+from common import *
 import os
-import random
 import sys
 
-from string import punctuation, digits, ascii_letters
 
 # number of blocks to be appended to the PE inside the PDF
 BLOCKCOUNT = 2
 
 
 random.seed(31415)
-def randblock(l):
-	return bytes([random.randrange(255) for i in range(l)])
-
-
-
-# Cosmetic functions ###########################################################
-
-ASCII = (punctuation + digits + ascii_letters + " ").encode()
-
-def hexii(c):
-		#replace 00 by empty char
-		if c == b"\0":
-			return b"  "
-		#replace printable char by .<char>
-		if c in ASCII:
-			return b" " + bytes([c])
-		if c == 0x0a:
-			return b"\n"
-		if c == b"\r":
-			return b"\\r"
-		#otherwise, return hex
-		return b"%02X" % c
-
-
-def hexiis(s):
-	return repr(b" ".join([hexii(c) for c in s]))[2:-1]
-
-
-def showsplit(d, i):
-	WIDTH = 8
-	return "%s  |  %s" % (hexiis(d[i-WIDTH:i]), hexiis(d[i:i+WIDTH]))
-
-
-
-# 'GCM' functions ##############################################################
-
-def cut3(data, a):
-	# skip 0:a[0] -- not needed ?
-	return data[a[0]:a[1]], data[a[1]:a[2]], data[a[2]:]
-
-
-def mixfiles(d1, d2, cuts):
-	"""mixing data with exclusive parts of each data"""
-	assert len(d1) == len(d2)
-	d = b""
-	start = 0
-	keep = d1
-	skip = d2
-	for end in cuts:
-		d += keep[start:end]
-		start = end
-		keep, skip = skip, keep
-	d += keep[start:]
-	return d
-
-
-def splitfile(data, cuts):
-	p1 = b""
-	p2 = b""
-	start = 0
-	count = 0
-	for end in cuts:
-		count += 1
-		p1 += data[start:end]
-		p2 += randblock(end-start)
-
-		start = end
-		p1, p2 = p2, p1
-
-	p1 += data[end:]
-	p2 += randblock(len(data)-end)
-	assert len(p1) == len(p2)
-	if count % 2 == 1:
-		p1, p2 = p2, p1
-
-	return p1, p2
-
-
-
-# PDF functions ################################################################
-
-def EnclosedStringS(d, starts, ends):
-	off = d.find(starts)
-	return d[off:d.find(ends, off + len(starts))]
-
-
-def EnclosedString(d, starts, ends):
-	off = d.find(starts) + len(starts)
-	return d[off:d.find(ends, off)]
-
-
-def getCount(d):
-	s = EnclosedString(d, b"/Count ", b"/")
-	count = int(s)
-	return count
-
-
-def adjustPDF(contents):
-	startSig = contents.find(b"%PDF") # relative to file start
-	startXREF = contents.find(b"\nxref\n0 ") + 1
-	endXREF = contents.find(b" \n\n", startXREF) + 1
-	origXref = contents[startXREF:endXREF]
-	objCount = int(origXref.splitlines()[1].split(b" ")[1])
-
-	xrefLines = [
-		b"xref",
-		b"0 %i" % objCount,
-		# mutool declare its first xref like this
-		b"0000000000 00001 f "
-		]
-
-	i = 1
-	while i < objCount:
-		# only very standard object declarations
-		off = contents.find(b"\n%i 0 obj\n" % i) + 1
-		xrefLines.append(b"%010i 00000 n " % (off -  startSig))
-		i += 1
-
-	xref = b"\n".join(xrefLines)
-
-	# XREF length should be unchanged
-	try:
-		assert len(xref) == len(origXref)
-	except AssertionError:
-		print("<:", repr(origXref))
-		print(">:", repr(xref))
-
-	contents = contents[:startXREF] + xref + contents[endXREF:]
-
-	startStartXref = contents.find(b"\nstartxref\n", endXREF) + len(b"\nstartxref\n")
-	endStartXref = contents.find(b"\n%%EOF", startStartXref)
-	contents = contents[:startStartXref] + b"%08i" % (startXREF - startSig) + contents[endStartXref:]
-
-	return contents
-
-
-template = b"""%%PDF-1.3
-%%\xC2\xB5\xC2\xB6
-1 0 obj
-<</Length 2 0 R>>
-stream
-%(parasite)s
-endstream
-endobj
-
-2 0 obj
-%(lenPAR)i
-endobj
-
-3 0 obj
-<</Type /Catalog /Pages 4 0 R>>
-endobj
-
-4 0 obj
-<</Type/Pages/Count %(count)i/Kids[%(kids)s]>>
-endobj
-"""
-
-# a compact dummy PDF declaring an empty page
-dummy = b"""%PDF-1.5
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Kids[3 0 R]/Type/Pages/Count 1>>endobj
-3 0 obj<</Type/Page/Contents 4 0 R>>endobj
-4 0 obj<<>>endobj
-
-xref
-0 5
-0000000000 65536 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
-0000000143 00000 n 
-
-trailer<</Size 5/Root 1 0 R>>
-
-startxref
-163
-%%EOF
-"""
-
-
 
 # Main functions ###############################################################
 
@@ -207,23 +25,37 @@ if len(sys.argv) == 1:
 	sys.exit()
 
 
-
 print(" * merging host with a dummy page") #####################################
 
 with fitz.open() as mergedDoc:
-  with fitz.open("pdf", dummy) as dummyDoc:
-    mergedDoc.insertPDF(dummyDoc)
 
-  with fitz.open(sys.argv[1]) as inDoc:
-    mergedDoc.insertPDF(inDoc)
-  dm = mergedDoc.write()
+	with fitz.open("pdf", dummy) as dummyDoc:
+		mergedDoc.insertPDF(dummyDoc)
 
+	with fitz.open(sys.argv[1]) as inDoc:
+		toc = inDoc.getToC(simple=False)
+		pagemode = getValDecl(inDoc.write(), b"/PageMode")
+		toc = adjustToC(toc)
+		mergedDoc.insertPDF(inDoc)
+	mergedDoc.setToC(toc)
+	dm = mergedDoc.write()
+
+	if 0: mergedDoc.save("_1merged.pdf")
+
+if pagemode == b"":
+	pagemode = b"/PageMode /UseOutlines" 
 
 
 print(" * removing dummy page reference") ######################################
 count = getCount(dm) - 1
 
 kids = EnclosedString(dm, b"/Kids[", b"]")
+
+outlines = getObjDecl(dm, b"/Outlines")
+names = getObjDecl(dm, b"/Names")
+openaction = getObjDecl(dm, b"/OpenAction")
+
+extra = outlines + names + openaction + pagemode
 
 # we skip the first dummy that should be 4 0 R because of merge
 REF = b"4 0 R "
@@ -242,9 +74,11 @@ dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
 print(" * normalizing parasite") ###############################################
 
 with fitz.open() as mergedDoc:
-  with fitz.open(sys.argv[2]) as inDoc:
-    mergedDoc.insertPDF(inDoc)
-  para = mergedDoc.write()
+	with fitz.open(sys.argv[2]) as inDoc:
+		toc = inDoc.getToC(simple=False)
+		mergedDoc.insertPDF(inDoc)
+	mergedDoc.setToC(toc)
+	para = mergedDoc.write()
 
 para += b"\0" * (16 + (16 - (len(para) % 16)))
 
@@ -262,19 +96,19 @@ for _c in para_cuts:
 
 # helps PDFjs to parse successfully
 # cf https://mozilla.github.io/pdf.js/web/viewer.html
-parasite = b"\n" + para[:para_cuts[2]] + b"\n%"
-parasite += b"\0" * (16 - (len(parasite) % 16))
+payload = b"\n" + para[:para_cuts[2]] + b"\n%"
+payload += b"\0" * (16 - (len(payload) % 16))
 
-lenPAR = len(parasite)
+payload_l = len(payload)
 
 
 
 print(" * inserting parasite") #################################################
 mapping = {}
-for s in ("parasite", "lenPAR", "count", "kids"):
+for s in ("payload", "payload_l", "count", "kids", "extra"):
 	mapping[s.encode()] = locals()[s]
 
-cuts = [0x30, 0x30 + lenPAR]
+cuts = [0x30, 0x30 + payload_l]
 
 
 contents = (template % mapping) + dm
