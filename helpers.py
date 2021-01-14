@@ -95,3 +95,7 @@ def int4l(i):
 def int4(i, e):
 	assert e[0] in "<>"
 	return struct.pack(e[0] + "I", i)
+
+
+def getd(d, o, s):
+	return d[o:o+s]

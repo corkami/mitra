@@ -1,7 +1,7 @@
-# 2020/10/03 v0.2
+# 2021/01/14 v0.2
 
 New:
-- support w/ parasite: Cab, PSD
+- support w/ parasite: Cab, PSD, Wad
 - basic support: LNK
 - flag '-f' to force parasiting of arbitrary data
 - block padding option

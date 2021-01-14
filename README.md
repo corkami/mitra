@@ -66,65 +66,66 @@ and demonstrate the risks.
 # Status
 
 ```
-                          Delayed               Magic at offset zero,                 No appended
-      Any offset  Cavities start               tolerated appended data                    data    Footer
+                          Delayed                 Magic at offset zero,                  No appended
+      Any offset  Cavities start                 tolerated appended data                     data    Footer
 
-        Z 7 A R   P I D T   P M   A B B C C E E F F G G I I I I J J N O P L P P R R T   B J P P W   I X
-        i Z r A   D S C A   S P   R M Z A P B L L l I Z C C D L P P E G S N E N I T I   P a C C A   D Z
-        p   j R   F O M R     4     P 2 B I M F V a F   C O 3 D 2 G S G D K   G F F F   G v A A S   3
-                                          O L     c         v A                 F   F     a P P M   v
-                                                            2                                 N     1
+        Z 7 A R   P I D T   P M   A B B C C E E F F G G I I I I J J N O P L P P R R T W   B J P P W   I X
+        i Z r A   D S C A   S P   R M Z A P B L L l I Z C C D L P P E G S N E N I T I A   P a C C A   D Z
+        p   j R   F O M R     4     P 2 B I M F V a F   C O 3 D 2 G S G D K   G F F F D   G v A A S   3
+                                          O L     c         v A                 F   F       a P P M   v
+                                                            2                                   N     1
 
-Zip     . X X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
-7Z      X . X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
-Arj     X X . X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
-RAR     X X X .   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
+Zip     . X X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+7Z      X . X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+Arj     X X . X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+RAR     X X X .   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
 
-PDF     X X X X   . X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
-ISO     X X X X   X . X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       40
-DCM     X X X X   X X .     X X   X X X X X   X X X X X   X X X X X X X X   X X X X X   X X X X X       36
-TAR     X X X X   X X   .   X X   X     X X     X X   X   X X X X X   X X     X X X X   X   X X X       29
+PDF     X X X X   . X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+ISO     X X X X   X . X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+DCM     X X X X   X X .     X X   X X X X X   X X X X X   X X X X X X X X   X X X X X X   X X X X X       37
+TAR     X X X X   X X   .   X X   X     X X     X X   X   X X X X X   X X     X X X X X   X   X X X       30
 
-PS      X X X X   X X X X   .                                                                            8
-MP4     X X X X   X X X X     .                                                                          8
+PS      X X X X   X X X X   .                                                                              8
+MP4     X X X X   X X X X     .                                                                            8
 
-AR      X X X X   X X X X         .                                                                      8
-BMP     X X X X   X X X             .                                                                    7
-BZ2     X X X X   X X X               .                                                                  7
-CAB     X X X X   X X X X               .                                                                8
-CPIO    X X X X   X X X X                 .                                                              8
-EBML    X X X X   X X                       .                                                            6
-ELF     X X X X   X X X                       .                                                          7
-FLV     X X X X   X X X X                       .                                                        8
-Flac    X X X X   X X X X                         .                                                      8
-GIF     X X X X   X X X                             .                                                    7
-GZ      X X X X   X X X X                             .                                                  8
-ICC     X X X X   X X                                   .                                                6
-ICO     X X X X   X X X X                                 .                                              8
-ID3v2   X X X X   X X X X                                   .                                            8
-ILDA    X X X X   X X X X                                     .                                          8
-JP2     X X X X   X X X X                                       .                                        8
-JPG     X X X X   X X X X                                         .                                      8
-NES     X X X X   X X X                                             .                                    7
-OGG     X X X X   X X X X                                             .                                  8
-PSD     X X X X   X X X X                                               .                                8
-LNK     X X X X   X X                                                     .                              6
-PE      X X X X   X X X                                                     .                            7
-PNG     X X X X   X X X X                                                     .                          8
-RIFF    X X X X   X X X X                                                       .                        8
-RTF     X X X X   X X X X                                                         .                      8
-TIFF    X X X X   X X X X                                                           .                    8
+AR      X X X X   X X X X         .                                                                        8
+BMP     X X X X   X X X             .                                                                      7
+BZ2     X X X X   X X X               .                                                                    7
+CAB     X X X X   X X X X               .                                                                  8
+CPIO    X X X X   X X X X                 .                                                                8
+EBML    X X X X   X X                       .                                                              6
+ELF     X X X X   X X X                       .                                                            7
+FLV     X X X X   X X X X                       .                                                          8
+Flac    X X X X   X X X X                         .                                                        8
+GIF     X X X X   X X X                             .                                                      7
+GZ      X X X X   X X X X                             .                                                    8
+ICC     X X X X   X X                                   .                                                  6
+ICO     X X X X   X X X X                                 .                                                8
+ID3v2   X X X X   X X X X                                   .                                              8
+ILDA    X X X X   X X X X                                     .                                            8
+JP2     X X X X   X X X X                                       .                                          8
+JPG     X X X X   X X X X                                         .                                        8
+NES     X X X X   X X X                                             .                                      7
+OGG     X X X X   X X X X                                             .                                    8
+PSD     X X X X   X X X X                                               .                                  8
+LNK     X X X X   X X                                                     .                                6
+PE      X X X X   X X X                                                     .                              7
+PNG     X X X X   X X X X                                                     .                            8
+RIFF    X X X X   X X X X                                                       .                          8
+RTF     X X X X   X X X X                                                         .                        8
+TIFF    X X X X   X X X X                                                           .                      8
+WAD     X X X X   X X X X                                                             .                    8
 
-BPG     X X X X   X X X X                                                               .                8
-Java    X X X X   X X X                                                                   .              7
-PCAP    X X X X   X X X X                                                                   .            8
-PCAPN   X X X X   X X X X                                                                     .          8
-WASM    X X X X   X X X X                                                                       .        8
+BPG     X X X X   X X X X                                                                 .                8
+Java    X X X X   X X X                                                                     .              7
+PCAP    X X X X   X X X X                                                                     .            8
+PCAPN   X X X X   X X X X                                                                       .          8
+WASM    X X X X   X X X X                                                                         .        8
 
-ID3v1                                                                                               .    0
-XZ                                                                                                    .  0
+ID3v1                                                                                                 .    0
+XZ                                                                                                      .  0
 
-Formats combinations: 278
+Formats combinations: 286
 ```
 
 Notes that some formats are containers and apply to several file types.
