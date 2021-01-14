@@ -3,65 +3,35 @@
 __all__ = [
 # containers
 	"ebml",         # Extensible Binary Meta Language: Matroska, WebM...
-	"flv",          # Flash Video
 	"ogg",          # Vorbis, Opus, Ogg Flac, Theora, Dirac
-	"mp4",          # Atom/Box MP4.1 QuickTime .MOV MP4 
-	"riff",         # Resource Interchange File Format: WAV AVI WebP...
+	"mp4",          # ISO Base media / Atom/Box MP4.1 QuickTime .MOV MP4 except heif heic jp2
+	"riff",         # Resource Interchange File Format: WAV AVI except WebP
 
 # images
-	"bpg",          # Better Portable Graphics
-	"dcm",          # DICOM Digital Imaging and Communications in Medicine
-	"icc",          # Color profiles
-	"ico",          # Windows Icons (00 00 01 00)
-	"ilda",         # International Laser Display Association
-	"bmp",          # Bitmap image file
-	"gif",          # Graphics Interchange Format
-	"jpg",          # JFIF Joint Photographic Experts Group File Interchange Format
-	"jp2",          # JPEG 2000
-	"png",          # Portable Network Graphics
-	"psd",          # Adobe Photoshop
-	"tiff",         # Tagged Image File Format
-	"svg",          # Scalable Vector Graphics (XML-based images)
+	"ico", "jpg", "bpg", "dcm", "icc", "ilda", "bmp", "gif", "jp2", "png", "psd", "svg", "tiff",
 
 # documents
 	"pdf",          # Portable Document Format
 	"pdfc",         # Portable Document Format (cavity)
-	"postscript",   # PostScript
-	"rtf",          # Rich Text Format
+	"postscript", "rtf",
 
 # executables
-	"elf",          # executable and linkable format
 	"pe_hdr",       # portable executable (via PE header)
 	"pe_sec",       # portable executable (via sections)
-	"nes",          # iNES format rom
-	"wasm",         # Web Assembly
-	"java",         # Java class
+	"elf", "nes", "wasm",	"java",
 
 # archives
-	"_7z",
-  "ar",
-	"arj",
-	"cab",
-	"cpio",
-	"gzip",
-	"bzip2",
-	"iso",
-	"rar",
-	"tar",
-	"xz",
-	"zip_",
+	"_7z", "ar", "arj", "cab", "cpio", "gzip", "bzip2", "iso", "rar",
+	"tar", "wad", "xz", "zip_",
 
-# audio
-	"id3v1",
-	"id3v2",
-	"flac",
+# media
+	"id3v1", "id3v2", "flac", "flv",
 
 # misc
-  "lnk",          # Microsoft Shell Link
+	"lnk",
 
 # captures
-	"pcap",         # Packet Capture
-	"pcapng",       # Packet Capture Next Generation
+	"pcap", "pcapng",
 
 	"blob",
 ]

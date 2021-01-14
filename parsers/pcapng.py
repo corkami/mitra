@@ -4,7 +4,7 @@ from parsers import FType
 from helpers import int4l
 
 class parser(FType):
-	DESC = "Packet Capture Next Generation"
+	DESC = "PCAPNG / Packet Capture Next Generation"
 	TYPE = "PCAPNG"
 	MAGIC = b"\x0a\x0d\x0d\x0a"
 

@@ -5,7 +5,7 @@ import binascii
 
 
 class parser(FType):
-	DESC = "Shell Link"
+	DESC = "LNK / Microsoft Shell Link"
 	TYPE = "LNK"
 	MAGIC = binascii.unhexlify("4C000000" + "0114020000000000C000000000000046")
 

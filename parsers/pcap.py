@@ -9,7 +9,7 @@ from helpers import *
 
 
 class parser(FType):
-	DESC = "Packet Capture"
+	DESC = "PCAP / Packet Capture"
 	TYPE = "PCAP"
 	MAGIC = b"\xd4\xc3\xb2\xa1" # regular, swapped
 

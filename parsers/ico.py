@@ -10,7 +10,7 @@ from helpers import *
 
 
 class parser(FType):
-	DESC = "ICO"
+	DESC = "ICO / Windows icon"
 	TYPE = "ICO"
 
 	def __init__(self, data=""):
