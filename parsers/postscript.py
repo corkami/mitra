@@ -2,20 +2,7 @@
 
 from parsers import FType
 
-# - https://www.adobe.com/content/dam/acom/en/devnet/actionscript/articles/psrefman.pdf
-# - PoCorGTFO 13
-
-# If you start the PostScript code like a function, it will be ignored.
-# therefore if you start the file with /{( then any binary data can be added.
-# (this define an empty-named function, and starts a string declaration)
-
-# /{(<parasite>)}<original files> just may work,
-# even with very big parasite,
-# except if the sequence )<whitespace>} is encountered.
-
-# another way to keep execution control is
-#   to encode a line comment, starting with '%'
-
+# function parasites shouldn't contain unbalanced parenthesis
 
 class parser(FType):
 	DESC = "PS / PostScript"
