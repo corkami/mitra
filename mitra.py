@@ -181,6 +181,10 @@ def Stack(ftype1, ftype2, fn1, fn2):
 		print(("Stack: concatenation of File1 (type %s) and File2 (type %s)" % (ftype1.TYPE, ftype2.TYPE)))
 		# appData = ftype2.fixformat(ftype2.data, len(ftype1.data)) # alignments / padding?
 		appData = ftype2.data
+		nullwrap = ftype1.wrappend(b"")
+		if nullwrap is None:
+			return None
+
 		swap_o = len(ftype1.data + 
 			ftype1.wrappend(b""))
 
