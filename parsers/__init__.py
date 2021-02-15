@@ -99,8 +99,8 @@ class FType(object):
 
 
 	def wrappend(self, data):
-		"""wrapps appended data"""
-		return data
+		"""wraps appended data"""
+		return self.wrap(data)
 
 
 	def wrapparasite(self, fparasite, d, cut):
@@ -119,7 +119,7 @@ class FType(object):
 
 
 	def cutparasite(self, fparasite, d, cut):
-    # handle pre-cavity in parasite format
+		# handle pre-cavity in parasite format
 		prewrap_s = self.getPrewrap(len(d))
 		if fparasite.precav_s > 0:
 			# estimating just length changes

@@ -42,10 +42,6 @@ class parser(FType):
 		])
 
 
-	def wrappend(self, data):
-		return self.wrap(data)
-
-
 	def getCut(self):
 		host = self.data
 		# we can put our private tag just after the metadata part
