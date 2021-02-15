@@ -74,7 +74,7 @@ class parser(FType):
 
 		return bytes(hdr) + d[HEADER_s:]
  
-
+ 
 	def fixformat(self, d, delta):
 		# we just update the new size in the header.
 		# the size is already rounded up to 512.

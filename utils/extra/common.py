@@ -105,34 +105,34 @@ def getCount(d):
 
 
 def getObjDecl(d, s):
-  val = EnclosedString(d, s, b"0 R")
-  val = val.strip()
-  if val.decode().isnumeric():
-    return b"%s %s 0 R" % (s, val)
-  else:
-    return b""
+	val = EnclosedString(d, s, b"0 R")
+	val = val.strip()
+	if val.decode().isnumeric():
+		return b"%s %s 0 R" % (s, val)
+	else:
+		return b""
 
 
 def getValDecl(d, s):
-  """locates declaration such as '/PageMode /UseOutlines' """
-  off = d.find(s) + len(s)
-  if off == -1:
-    return b""
-  match = re.match(b" *\/[A-Za-z0-9]*", d[off:])
-  if match is None:
-    return b""
-  else:
-    return b"%s %s" % (s, match[0])
+	"""locates declaration such as '/PageMode /UseOutlines' """
+	off = d.find(s) + len(s)
+	if off == -1:
+		return b""
+	match = re.match(b" *\/[A-Za-z0-9]*", d[off:])
+	if match is None:
+		return b""
+	else:
+		return b"%s %s" % (s, match[0])
 
 
 def adjustToC(toc):
-  """increasing page numbers of each ToC entry"""
-  for entry in toc:
-    d = entry[3]
-    if d["kind"] == 1:
-      d["page"] += 1
-      entry[2] += 1
-  return toc
+	"""increasing page numbers of each ToC entry"""
+	for entry in toc:
+		d = entry[3]
+		if d["kind"] == 1:
+			d["page"] += 1
+			entry[2] += 1
+	return toc
 
 
 def adjustPDF(contents):
@@ -189,11 +189,11 @@ endobj
 
 3 0 obj
 <<
-  /Type /Catalog
-  /Pages 4 0 R
-  /Payload 1 0 R %% to prevent garbage collection
-  %(extra)s %% optional: Names + OpenAction + Outlines + PageMode
-  >>
+	/Type /Catalog
+	/Pages 4 0 R
+	/Payload 1 0 R %% to prevent garbage collection
+	%(extra)s %% optional: Names + OpenAction + Outlines + PageMode
+	>>
 endobj
 
 4 0 obj

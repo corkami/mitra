@@ -20,12 +20,12 @@ BLOCKCOUNT = 2
 # Main functions ###############################################################
 
 if len(sys.argv) == 1:
-  print("PDF-PE GCM collider")
-  print("Usage: pdfpe.py <file1.pdf> <file2.exe>")
-  sys.exit()
+	print("PDF-PE GCM collider")
+	print("Usage: pdfpe.py <file1.pdf> <file2.exe>")
+	sys.exit()
 
 with open(sys.argv[2], "rb") as f:
-  payload = f.read()
+	payload = f.read()
 
 # for tag correcting and tag setting
 payload += b"\0" * 16 * BLOCKCOUNT
@@ -38,22 +38,22 @@ payload_l = len(payload) - 46 # minimal PDF header length
 print(" * normalizing, merging with a dummy page") #############################
 
 with fitz.open() as mergedDoc:
-  with fitz.open("pdf", dummy) as dummyDoc:
-    mergedDoc.insertPDF(dummyDoc)
+	with fitz.open("pdf", dummy) as dummyDoc:
+		mergedDoc.insertPDF(dummyDoc)
 
-  with fitz.open(sys.argv[1]) as inDoc:
-    if _DEBUG: inDoc.save("_0normalized.pdf")
+	with fitz.open(sys.argv[1]) as inDoc:
+		if _DEBUG: inDoc.save("_0normalized.pdf")
 
-    pagemode = getValDecl(inDoc.write(), b"/PageMode")
+		pagemode = getValDecl(inDoc.write(), b"/PageMode")
 
-    toc = inDoc.getToC(simple=False)
-    toc = adjustToC(toc)
+		toc = inDoc.getToC(simple=False)
+		toc = adjustToC(toc)
 
-    mergedDoc.insertPDF(inDoc)
+		mergedDoc.insertPDF(inDoc)
 
-  mergedDoc.setToC(toc)
-  dm = mergedDoc.write()
-  if _DEBUG: mergedDoc.save("_1merged.pdf")
+	mergedDoc.setToC(toc)
+	dm = mergedDoc.write()
+	if _DEBUG: mergedDoc.save("_1merged.pdf")
 
 
 print(" * removing dummy page reference") ######################################
@@ -82,13 +82,13 @@ dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
 print(" * aligning PE header") #################################################
 mapping = {}
 for s in (
-  "payload",
-  "payload_l",
-  "count",
-  "kids",
-  "extra",
-  ):
-  mapping[s.encode()] = locals()[s]
+	"payload",
+	"payload_l",
+	"count",
+	"kids",
+	"extra",
+	):
+	mapping[s.encode()] = locals()[s]
 
 # aligning payload header
 stage1 = template % mapping
@@ -102,14 +102,14 @@ mapping[b"payload_l"] = payload_l
 contents = (template % mapping) + dm
 contents = adjustPDF(contents)
 if _DEBUG:
-  with open("_2hacked.pdf", "wb") as f:
-    f.write(contents)
+	with open("_2hacked.pdf", "wb") as f:
+		f.write(contents)
 
 
 print(" * finalizing main PDF") ################################################
 # let's adjust offsets - using garbage=1 because object 2 is not required
 with fitz.open("pdf", contents) as hackedDoc:
-  cleaned = hackedDoc.write(garbage=1)
+	cleaned = hackedDoc.write(garbage=1)
 
 
 # Not always needed - most PE are aligned
@@ -120,20 +120,20 @@ with fitz.open("pdf", contents) as hackedDoc:
 print(" * generating polyglot") ################################################
 
 offsets = [2,
-  cleaned.find(b"\nstream\n") + len(b"\nstream\n"),
-  cleaned.find(b"\nendstream")]
+	cleaned.find(b"\nstream\n") + len(b"\nstream\n"),
+	cleaned.find(b"\nendstream")]
 offsets_s = repr(b"-".join([b"%x" % i for i in offsets]))[2:-1]
 
 if not _DEBUG:
-  cleaned = b"M" + b"Z" + cleaned[2:]
+	cleaned = b"M" + b"Z" + cleaned[2:]
 
 with open("Z(%s).exe.pdf" % offsets_s, "wb") as f:
-  f.write(cleaned)
+	f.write(cleaned)
 
 if _DEBUG:
-  cleaned = b"M" + b"Z" + cleaned[2:]
-  with open("Z(%s).exe" % offsets_s, "wb") as f:
-    f.write(cleaned)
+	cleaned = b"M" + b"Z" + cleaned[2:]
+	with open("Z(%s).exe" % offsets_s, "wb") as f:
+		f.write(cleaned)
 
 print("Success!")
 print()
