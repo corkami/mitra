@@ -1,4 +1,4 @@
-# 2021/01/14 v0.2
+# 2021/02/15 v0.2
 
 New:
 - support w/ parasite: Cab, PSD, Wad
@@ -6,8 +6,13 @@ New:
 - flag '-f' to force parasiting of arbitrary data
 - block padding option
 - tool: [AES-GCM exploit](utils/gcm/README.md)
+- PostScript:
+ - alternate parasite strategy
+ - parasite validation
+ - distinction between classic parasites and wrappending.
 
 Fixes:
+- gzip parasite in proper subfield in the extra field
 - fixed PostScript wrap sizes
 - support cavity parasite and wrappending (ISO, DICOM)
 
