@@ -27,6 +27,7 @@ class parser(FType):
 
 	def getCut(self):
 		self.cut = get4l(self.data, self.OFFSET_o)
+		self.parasite_o = self.cut + self.prewrap
 		return self.cut
 
 

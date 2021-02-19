@@ -113,6 +113,7 @@ class parser(FType):
 
 				off += ext_l
 		self.cut = off
+		self.parasite_o = self.cut - self.prewrap
 		return self.cut
 
 

@@ -100,6 +100,7 @@ class parser(FType):
 	def getCut(self):
 		# lazy way to find the 2nd page
 		self.cut = self.data[1:].find(b"OggS") + 1
+		self.parasite_o = self.cut + self.prewrap
 		return self.cut
 
 

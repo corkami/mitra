@@ -6,7 +6,10 @@
 # First CFFILE pointed by CFHEADER.coffFiles
 # CFFOLDER points via coffCabStart to CFData
 
-# -> parasitize = , update pointers in CFHeader, in CFolder, size in CFHeader
+# parasitize
+# - update pointers coffFiles in CFHeader,
+#     coffCabStart in CFolders
+# - size in CFHeader
 
 
 from parsers import FType
@@ -56,8 +59,9 @@ class parser(FType):
 
 	def getCut(self):
 		# Folder structures follow the header
-		self.cut += 0x8 * self.cFolders
+		self.cut = self.CFHEADER_s + 0x8 * self.cFolders
 		# cut after all Folders
+		self.parasite_o = self.cut
 		return self.cut
 
 
@@ -67,7 +71,7 @@ class parser(FType):
 
 		o = self.CFHEADER_s
 		for i in range(self.cFolders):
-			d = inc4l(d, o + self.coffCabStart_o, delta)
-			o += self.CFFOLDER_s
+ 			d = inc4l(d, o + self.coffCabStart_o, delta)
+ 			o += self.CFFOLDER_s
 
 		return d

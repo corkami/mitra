@@ -13,7 +13,7 @@ class parser(FType):
 	DESC = "CPIO"
 	TYPE = "CPIO"
 	MAGIC = b"\xc7\x71" # 070707o
-	HDR_s = 0x1A
+	HDR_s = 0x1C
 
 	trailer = b"TRAILER!!!"
 

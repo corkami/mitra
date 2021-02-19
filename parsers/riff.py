@@ -16,11 +16,11 @@ class parser(FType):
 		self.data = data
 
 		self.bParasite = True
-		self.parasite_o = 12
 		self.parasite_s = 0xFFFFFFFF
 
 		self.cut = 12
 		self.prewrap = 2*4
+		self.parasite_o = self.cut + self.prewrap
 
 
 	def identify(self):

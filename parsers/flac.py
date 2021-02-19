@@ -39,6 +39,7 @@ class parser(FType):
 		l = get4b(a, 0)
 
 		self.cut = 4+4+l
+		self.parasite_o = self.cut + self.prewrap
 		return self.cut
 
 

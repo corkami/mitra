@@ -33,6 +33,7 @@ class parser(FType):
 
 		# The section starts with its size, then Image Resource Blocks
 		self.cut = self.resource_o + 4
+		self.parasite_o = self.cut + self.prewrap
 		return self.cut
 
 

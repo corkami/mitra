@@ -78,6 +78,7 @@ class parser(FType):
 				return None
 
 		self.cut = off
+		self.parasite_o = self.cut + self.prewrap
 		return self.cut
 
 
