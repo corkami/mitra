@@ -73,7 +73,7 @@ class FType(object):
 		return data # most format don't need relocations
 
 
-	def wrap(self, data, bEnd=False):
+	def wrap(self, data):
 		"""Wrap a parasite into its containing element"""
 		return data
 
@@ -99,8 +99,8 @@ class FType(object):
 
 
 	def wrappend(self, data):
-		"""wraps appended data"""
-		return self.wrap(data, bEnd=True)
+		"""wrapps appended data"""
+		return data
 
 
 	def wrapparasite(self, fparasite, d, cut):
@@ -119,7 +119,7 @@ class FType(object):
 
 
 	def cutparasite(self, fparasite, d, cut):
-		# handle pre-cavity in parasite format
+    # handle pre-cavity in parasite format
 		prewrap_s = self.getPrewrap(len(d))
 		if fparasite.precav_s > 0:
 			# estimating just length changes
@@ -148,8 +148,6 @@ class FType(object):
 			return None, []
 
 		wrapped = self.wrap(parasite)
-		if wrapped is None:
-			return None, []
 		delta = len(wrapped)
 		swaps = [
 			cut + prewrap_s,

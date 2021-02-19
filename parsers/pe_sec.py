@@ -41,7 +41,7 @@ def relocateSections(d, SecTblOff, SecCount, delta):
 
 
 class parser(FType):
-	DESC = "Portable Executable (hdr)"
+	DESC = "Portable Executable (sec)"
 	TYPE = "PE(sec)"
 	MAGIC = b"MZ"
 

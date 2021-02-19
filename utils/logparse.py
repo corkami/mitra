@@ -62,7 +62,7 @@ Delayed = ["PS", "MP4",]
 General = [
 "AR", "BMP", "BZ2", "CAB", "CPIO", "EBML", "ELF", "FLV", "Flac", "GIF", "GZ",
 "ICC", "ICO", "ID3v2", "ILDA", "JP2", "JPG", "NES", "OGG", "PSD", "LNK",
-"PE", "PNG", "RIFF", "RTF", "TIFF",
+"PE", "PNG", "RIFF", "RTF", "TIFF", "WAD",
 ]
 
 All = []

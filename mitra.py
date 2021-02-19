@@ -176,6 +176,7 @@ def Hit(type1, type2):
 	if getVar("VERBOSE"):
 		dprint("HIT " + ";".join(sorted([type1, type2])))
 
+
 def Stack(ftype1, ftype2, fn1, fn2):
 	if isStackOk(ftype1, ftype2):
 		print(("Stack: concatenation of File1 (type %s) and File2 (type %s)" % (ftype1.TYPE, ftype2.TYPE)))

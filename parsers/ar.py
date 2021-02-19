@@ -39,6 +39,7 @@ class parser(FType):
 			])
 		return hdr
 
+
 # assert makeHdr(b"/") == b"/               0           0     0     000     0         `\n"
 # assert makeHdr(b"hello.txt/", perms=644, size=13) == b"hello.txt/      0           0     0     644     13        `\n"
 
