@@ -17,18 +17,18 @@ def randblock(l):
 ASCII = (punctuation + digits + ascii_letters + " ").encode()
 
 def hexii(c):
-		#replace 00 by empty char
-		if c == b"\0":
-			return b"  "
-		#replace printable char by .<char>
-		if c in ASCII:
-			return b" " + bytes([c])
-		if c == 0x0a:
-			return b"\n"
-		if c == b"\r":
-			return b"\\r"
-		#otherwise, return hex
-		return b"%02X" % c
+	#replace 00 by empty char
+	if c == b"\0":
+		return b"  "
+	#replace printable char by .<char>
+	if c in ASCII:
+		return b" " + bytes([c])
+	if c == 0x0a:
+		return b"\n"
+	if c == b"\r":
+		return b"\\r"
+	#otherwise, return hex
+	return b"%02X" % c
 
 
 def hexiis(s):

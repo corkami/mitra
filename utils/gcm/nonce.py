@@ -17,17 +17,9 @@ COUNTER_START = 0 if CTR else 2
 
 pad16 = lambda s: s + b"\0" * (16-len(s))
 
-
-
 def xor(a1, a2):
 	assert len(a1) == len(a2)
 	return bytes([(a1[i] ^ a2[i]) for i in range(len(a1))])
-
-
-def NonceToIV(n):
-	s = struct.pack(">L", n) + b"\0" * 4
-	s = b"\0"*(16 - len(s)) + s
-	return s
 
 
 def nonce_search(offset):
@@ -63,11 +55,31 @@ hdr2 = hdr1
 # PDF / PE
 hdr1, hdr2 = [ b"%P", b"MZ" ]
 
+
+def getMitraOverlap():
+	import sys
+	fn = sys.argv[1]
+	hdr1 = fn[fn.find("{")+1:]
+	hdr1 = hdr1[:hdr1.find("}")]
+	hdr1 = binascii.unhexlify(hdr1)
+
+	l = len(hdr1)
+	with open(fn, "rb") as f:
+		hdr2 = f.read(l)
+
+	return hdr1, hdr2
+
+
+hdr1, hdr2 = getMitraOverlap()
+
 hdr_xor = xor(hdr1,hdr2)
 hdr_xor_l = len(hdr_xor)
 
 key1 = b"Now?"
 key2 = b"L4t3r!!!"
+
+key1 = b"\x01" * 16
+key2 = b"\x02" * 16
 
 if __name__ == '__main__':
 	if COUNTER_START == 0:

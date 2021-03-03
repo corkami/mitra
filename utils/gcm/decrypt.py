@@ -2,6 +2,8 @@
 
 import sys
 
+import os
+import hashlib
 import binascii
 import struct
 from Crypto.Util.number import long_to_bytes,bytes_to_long
@@ -49,12 +51,16 @@ if __name__=='__main__':
 	if not success:
 		print("Decryption with other key failed didn't fail as expected")
 
-	exts = exts.split(" ")[-2:]
-	with open("output1.%s" % exts[0], "wb") as salfile:
-		salfile.write(plaintxt1)
+	hash = hashlib.sha256(ciphertext).hexdigest()[:8].lower()
 
-	with open("output2.%s" % exts[1], "wb") as pixfile:
-		pixfile.write(plaintxt2)
+	fname = os. path.splitext(fname)[0] # remove file extension
+
+	exts = exts.split(" ")[-2:]
+	with open("%s.%s.%s" % (fname, hash, exts[0]), "wb") as file1:
+		file1.write(plaintxt1)
+
+	with open("%s.%s.%s" % (fname, hash, exts[1]), "wb") as file2:
+		file2.write(plaintxt2)
 
 	print("key1:", key1.rstrip(b"\0"))
 	print("key1:", key2.rstrip(b"\0"))

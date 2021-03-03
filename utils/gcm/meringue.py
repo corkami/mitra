@@ -242,8 +242,6 @@ def collide(_key1, _key2, _nonce, _plain, _ad, DEBUG=False, _blockidx=-1):
 	ct_bkl = ct_l // BLOCKLEN
 	ct_bl = 8 * ct_l
 
-	if _blockidx < 0:
-		_blockidx += ct_bkl
 	ad_bl = 8*len(_ad)
 
 	print("blocks:", ct_bkl)
@@ -341,6 +339,38 @@ if __name__=='__main__':
 
 	with open(fnmix, "rb") as file:
 		dIn = file.read()
+
+	def BruteNonce(fn):
+		hdr1 = fn[fn.find("{")+1:]
+		hdr1 = hdr1[:hdr1.find("}")]
+		hdr1 = binascii.unhexlify(hdr1)
+
+		hdr2 = dIn[:len(hdr1)]
+		hdr_xor = xor(hdr1,hdr2)
+		hdr_xor_l = len(hdr_xor)
+		aes1 = AES.new(key1, AES.MODE_ECB)
+		aes2 = AES.new(key2, AES.MODE_ECB)
+
+		i = 0
+		for i in range(2**64):
+			block1 = aes1.encrypt(long_to_bytes((i << 32) + 2, 16))
+			block2 = aes2.encrypt(long_to_bytes((i << 32) + 2, 16))
+
+			if xor(block1[:hdr_xor_l], block2[:hdr_xor_l]) == hdr_xor:
+				return i
+		return None
+
+
+	if fnmix.startswith("O") and \
+		"{" in fnmix and \
+		"}" in fnmix:
+		print("Overlap file found")
+		noncei = BruteNonce(fnmix)
+		nonce = "%i" % noncei
+		nonceb = l2b(noncei,12)
+
+		print("Bruteforced nonce: %x" % noncei)
+
 	dIn = pad(dIn, BLOCKLEN) # the padding will break with formats not supporting appended data
 
 	assert len(dIn) % 16 == 0
@@ -359,6 +389,14 @@ if __name__=='__main__':
 	if blockidx == -1:
 		dIn += b"\0" * BLOCKLEN
 
+	if blockidx < 0:
+		blockidx += len(dIn) // 16 - 1
+
+	block_target = dIn[16*blockidx:16*(blockidx+1)]
+	if block_target != b"\0" * 16:
+		print("Error: target block is not null")
+		print("%i: %s" % (blockidx, block_target))
+		sys.exit()
 
 	print("key 1:", b2a(key1.strip(b"\0")))
 	print("key 2:", b2a(key2.strip(b"\0")))
