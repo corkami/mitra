@@ -5,7 +5,7 @@ Use [decrypt.py](../) to test and decrypt them.
 
 Polyglots:
 - Standard (different formats starting at different offsets):
-  - dicom-exe.gcm
+  - dicom-pe.gcm
   - gif-dicom.gcm
   - gzip-pdf.gcm
   - gzip-rar4.gcm
@@ -18,22 +18,23 @@ Polyglots:
   - tar-flv.gcm
 
 
-- Overlap "crypto" polyglots (requires bruteforced nonce):
- - 1 byte (PostScript)
-  - ps-jpg.gcm
-  - ps-png.gcm
- - 2 bytes (Portable Executable)
-  - png-exe.gcm
-  - mp3-exe.gcm
-  - bpg-exe.gcm
-  - pdf-exe.gcm
-  - jpg-pe.gcm
-  - pe-pcapng.gcm
-  - pdf-viewer.gcm
-  - wasm-exe.gcm
- - 5 bytes (JPG)
-  - jpg-bmp.gcm
-  - jpg-png.gcm
+- Overlap "crypto" polyglots (w/ bruteforced nonce):
+  - 1 byte (PostScript)
+    - ps-jpg.gcm
+    - ps-pe.gcm [hand-made zipper]
+    - ps-png.gcm
+  - 2 bytes (Portable Executable)
+    - png-pe.gcm
+    - mp3-pe.gcm
+    - bpg-pe.gcm
+    - pdf-pe.gcm
+    - jpg-pe.gcm
+    - pe-pcapng.gcm
+    - pdf-viewer.gcm (complete PDF article a PDF viewer PE)
+    - wasm-pe.gcm
+  - 5 bytes (JPG) - required manual post-processing for proper parasite length after encryption
+    - jpg-bmp.gcm
+    - jpg-png.gcm
 
 Ambiguous files (same type):
 - pdf-pdf.gcm
