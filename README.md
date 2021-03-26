@@ -17,9 +17,6 @@ Check Corkami [mini](https://github.com/corkami/pocs/tree/master/mini)
 or [tiny](https://github.com/corkami/pocs/tree/master/tiny) PoCs for input files.
 and the formats [repository](https://github.com/corkami/formats/tree/WIP) for some extra technical info.
 
-Some parsers rely on extra software:
-- PDF: `mutool` from [MuPDF](https://www.mupdf.com/docs/index.html).
-
 
 # Features
 
@@ -129,6 +126,45 @@ Formats combinations: 286
 ```
 
 Notes that some formats are containers and apply to several file types.
+
+
+## Overlap polyglots
+
+With the `--overlap` option (disabled by default), filetypes starting at the same offsets can be combined.
+
+The overwritten content might be restored via any operation, such as decryption via specific bruteforced parameters (CBC, GCM...), and is stored in the filename between curly brakets. Ex: `O(5-204){424D4E0100}.bmp.jpg`
+
+Since it's pure bruteforcing, it's not practical if the filetype requires too many bytes to be restored.
+
+```
+                                                               Variable  Unsupported
+                                                                offset     parasite
+Offsets
+         1 2 5 8     9  16  20  23  28  34  40  64  94  132    12  28   
+                      12          26  32  36      68  112 226    16     
+
+         P P J F M T F W G P R I R B C I P C J P E A P I I J    W B O      B E G L N
+         S E P l P I L A Z N I D T M P L S A P C L R C C C a    A P G      Z B I N E
+             G a 4 F V D   G F 3 F P I D D B 2 A F   A O C v    S G G      2 M F K S
+               c   F         F v     O A       P     P     a    M            L
+                               2               N
+                                               G
+
+1* PS    . M A ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ?
+2^ PE    M . A A A A A A A A A A A A A A A A A A                M M M
+5+ JPG   A A . # # # # # # X # # # X # # # # # #
+.  .
+.  .     [the table could go on but would take too long to bruteforce]
+
+           X: automated     #: not bruteforced yet
+           M: manual        ?: likely possible
+```
+
+- `*`: hack that relies on line comments with GhostScript - requires the parasite not to contain any new line, **after** encryption.
+- `^`: hack relying on overwritting the `Dos Header`, therefore restricting the parasite space to offsets `2`-`60`.
+- `+`: it should be 6 at first thought, but the last 2 bytes are the little endian length of the comment chunk,
+so it's possible to shrink that requirement to 5 bytes by increasing the first nibble.
+Ex: if the minimum encoded length is `01 4a` then you can make the parasite bigger to `02 XX` and make `XX` match the other content, which requires one byte less to bruteforce.
 
 
 # Notes
