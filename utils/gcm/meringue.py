@@ -324,7 +324,6 @@ if __name__=='__main__':
 
 	key1 = pad16(unhextry(key1))
 	key2 = pad16(unhextry(key2))
-	print(repr(key1))
 	assert not key1 == key2
 
 	if nonce.startswith("0x"):

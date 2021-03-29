@@ -273,6 +273,91 @@ def Cavity(ftype1, ftype2, fn1, fn2):
 		)
 
 
+def JpegOver5(jpeg, other, swaps, overlap):
+	"""pre-process JPEG to require only 5 bytes of overlap instead of 6
+
+	Store the incremented higher nibble
+	 and the other lower nibble
+	Grow the parasite by the minimal amount - up to 0x100 alignment
+	The parasite requires further growing on post-processing
+	 depending on the other lower nibble after encryption once the nonce is known.
+
+	Parameters
+  ----------
+	jpeg: data buffer
+		the JPEG file data with a parasite
+
+	other: data buffer
+		the other original file
+
+	swaps: list of int
+		where data swaps its origin in the final polyglot
+
+	overlap: list of bytes
+		values of overlapping bytes in the other file - should start like `other`
+	"""
+	highnib = jpeg[4]
+	lownib = jpeg[5]
+	offset = 4 + 0x100*highnib + lownib
+
+	if highnib == 0xff                 \
+		or not other.startswith(overlap) \
+		or len(swaps) != 2               \
+		or swaps[0] != 6                 \
+		or len(overlap) != 6:
+		return jpeg, swaps, overlap
+
+	othernib = other[5]
+
+	delta = 0x100 - lownib
+
+	swaps[0] -= 1     # saved one byte
+	swaps[1] += delta # padding
+
+	overlap = overlap[:-1]
+
+	jpeg = b"".join([
+		jpeg[:4],             # 00-03: the original JPG header
+		bytes([highnib + 1]), #   04: 0x100-padded parasite length
+		bytes([othernib]),    #   05: but storing the other byte for later
+		jpeg[6:offset],       # the previous parasite
+		delta*b"\0",          #  with 0x100-padding
+		jpeg[offset:],        # the rest of the JPEG
+		])
+
+	dprint("Jpeg overlap file: reducing one byte")
+	dprint("  (don't forget to postprocess after bruteforcing)")
+	return jpeg, swaps, overlap
+
+
+def JpegOver4(jpeg, other, swaps, overlap):
+	"""pre-process JPEG to require only 4 bytes of overlap instead of 6
+
+	Writes the 2 last byte of the overlap on the file.
+	Remove them from the file name.
+	Decrement the first split from the file name.
+	"""
+	if not other.startswith(overlap) \
+		or len(swaps) != 2             \
+		or swaps[0] != 6               \
+		or len(overlap) != 6:
+		return jpeg, swaps, overlap
+
+	offset = swaps[-1]
+	swaps[0] -= 2
+	overlap = overlap[:-2]
+
+	jpeg = b"".join([
+		jpeg[:4],      # 00-03: the original JPG header
+		other[4:6],    #   04: 0x100-padded parasite length
+		jpeg[6:],      # the previous parasite
+		])
+
+	dprint("Jpeg overlap file: reducing two bytes")
+	dprint("  (don't forget to postprocess after bruteforcing)")
+	return jpeg, swaps, overlap
+
+
 def Overlap(ftype1, ftype2, fn1, fn2, THRESHOLD=6):
 	dprint("Overlapping parasite")
 	if not ftype1.bParasite:
@@ -293,6 +378,15 @@ def Overlap(ftype1, ftype2, fn1, fn2, THRESHOLD=6):
 		return False
 
 	overlap = ftype2.data[:overlap_l]
+
+	# if it's a JPEG overlap, we can reduce the overlap by one byte
+	# by abusing the lower nibble of the comment length to match the other type content
+	# but this file is not a valid JPEG as is
+	# the comment is padded to 0x100 alignment,
+	# but the lowest nibble is the other byte before encryptions (w/ unknown nonce at this stage).
+	if ftype1.TYPE == "JPG":
+		parasitized, swaps, overlap = JpegOver4(parasitized, ftype2.data, swaps, overlap)
+
 	overlap_s = "".join("%02X" % c for c in overlap)
 	swapstr = "(%s)" % "-".join("%x" % s for s in swaps) if swaps != [] else ""
 	Hit(ftype1.TYPE, ftype2.TYPE)
@@ -303,6 +397,7 @@ def Overlap(ftype1, ftype2, fn1, fn2, THRESHOLD=6):
 		swaps=swaps,
 		overlap=overlap,	
 	)
+	print("Generic overlapping polyglot file created.")
 	return True
 
 
@@ -350,6 +445,7 @@ def OverlapPE(ftype1, ftype2, fn1, fn2):
 		swaps=swaps,
 		overlap=overlap,
 	)
+	print("Specific PE overlapping polyglot file created.")
 	return True
 
 
