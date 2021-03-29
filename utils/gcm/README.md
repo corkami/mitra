@@ -58,7 +58,7 @@ origin: P(8-1ea)-MP4[PDF].54fdf8e6.mp4.pdf
 
 ## Test
 
-Optionally, If you run `test.py mp4-pdf.gcm`,
+Optionally, If you run `decrypt.py mp4-pdf.gcm`,
 it will test the correct authenticated decryption of both plaintexts,
 and save them to files so that you can test their validity.
 

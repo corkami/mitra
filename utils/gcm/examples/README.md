@@ -32,7 +32,13 @@ Polyglots:
     - pe-pcapng.gcm
     - pdf-viewer.gcm (complete PDF article a PDF viewer PE)
     - wasm-pe.gcm
-  - 5 bytes (JPG) - required manual post-processing for proper parasite length after encryption
+  - 4 bytes (JPG) - required manual post-processing for proper parasite length after encryption
+    - jpg-bz2.gcm
+    - jpg-icc.gcm
+    - jpg-mp4.gcm
+    - jpg-ogg.gcm
+    - jpg-tif.gcm
+  - 5 bytes (JPG) - required manual post-processing too
     - jpg-bmp.gcm
     - jpg-png.gcm
 

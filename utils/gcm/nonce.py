@@ -5,11 +5,12 @@
 from Crypto.Cipher import AES
 
 import binascii
+import datetime
 import multiprocessing
 from Crypto.Util.number import long_to_bytes,bytes_to_long
 import struct
 
-num_threads = 8
+num_threads = 6
 
 CTR = False # else GCM
 
@@ -22,31 +23,44 @@ def xor(a1, a2):
 	return bytes([(a1[i] ^ a2[i]) for i in range(len(a1))])
 
 
-def nonce_search(offset):
+def xorcmp(a1, a2, x):
+	for i, c in enumerate(x):
+		if a1[i] ^ a2[i] != c:
+			return False
+	return True
+
+
+def nonce_search(thread):
+	start_time = datetime.datetime.now()
+	hdr_xor_l = len(hdr_xor)
 	aes1 = AES.new(pad16(key1), AES.MODE_ECB)
 	aes2 = AES.new(pad16(key2), AES.MODE_ECB)
 
 	found_nonce = None
-	i = 0
-	i //= num_threads
-	while i < 2**64:
+	limit = 2**(8*hdr_xor_l) * 2**16
+	start = thread * limit * num_threads
+	nonce = (start << 32) + COUNTER_START
+	steps = 2**(8*(hdr_xor_l) - 1)
 
-		nonce = (i*num_threads + offset)
+	i = 0
+	while i < limit:
+		nonce += 1 << 32
 
 		# a good period of calculation
-		if (nonce % 2**24) == 0x1001*offset:
-			print(">  thread %02i searched %08x" % (offset, nonce))
+		#if (i % steps) == 0:
+		#	print(">  thread %03i searched %016x" % (thread, i))
 
-		block1 = aes1.encrypt(long_to_bytes((nonce << 32) + COUNTER_START, 16))
-		block2 = aes2.encrypt(long_to_bytes((nonce << 32) + COUNTER_START, 16))
+		block1 = aes1.encrypt(long_to_bytes(nonce, 16))
+		block2 = aes2.encrypt(long_to_bytes(nonce, 16))
 
-		if xor(block1[:hdr_xor_l], block2[:hdr_xor_l]) == hdr_xor:
-			print("- nonce: %08i 0x%08x" % (nonce, nonce))
-			found_nonce = nonce
+		if xorcmp(block1, block2, hdr_xor):
+			found_nonce = nonce >> 32
+			elapsed = datetime.datetime.now() - start_time
+			print(" - found 0x%016x [thread:%03i time %s]" %
+				(found_nonce, thread, elapsed))
 			break
 
 		i += 1
-
 
 # dual JPGs with comments - xor 
 hdr1 = b"\xFF\xD8\xFF\xFE"
@@ -73,15 +87,15 @@ def getMitraOverlap():
 hdr1, hdr2 = getMitraOverlap()
 
 hdr_xor = xor(hdr1,hdr2)
-hdr_xor_l = len(hdr_xor)
 
-key1 = b"Now?"
-key2 = b"L4t3r!!!"
+# key1 = b"Now?"
+# key2 = b"L4t3r!!!"
 
 key1 = b"\x01" * 16
 key2 = b"\x02" * 16
 
 if __name__ == '__main__':
+	print("Start time: %s" % datetime.datetime.now())
 	if COUNTER_START == 0:
 		mode = "CTR"
 	elif COUNTER_START == 2:
@@ -94,9 +108,6 @@ if __name__ == '__main__':
 	print("hdr2: %s (%s)" % (binascii.hexlify(hdr2), repr(hdr2)))
 	print("start: %i (%s)" % (COUNTER_START, mode))
 
-	print("Results:")
-	#nonce_search(0)
-	#sys.exit()
 	multiprocessing.freeze_support()
 	pool = multiprocessing.Pool(num_threads)
 	retvals = pool.map_async(nonce_search,range(num_threads))

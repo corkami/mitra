@@ -139,8 +139,8 @@ Since it's pure bruteforcing, it's not practical if the filetype requires too ma
 ```
                                                                Variable  Unsupported
                                                                 offset     parasite
-Offsets
-         1 2 5 8     9  16  20  23  28  34  40  64  94  132    12  28   
+Minimal start offset
+         1 2 4 8     9  16  20  23  28  34  40  64  94  132    12  28   
                       12          26  32  36      68  112 226    16     
 
          P P J F M T F W G P R I R B C I P C J P E A P I I J    W B O      B E G L N
@@ -150,21 +150,22 @@ Offsets
                                2               N
                                                G
 
-1* PS    . M A ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ?
-2^ PE    M . A A A A A A A A A A A A A A A A A A                M M M
-5+ JPG   A A . # # # # # # X # # # X # # # # # #
+1* PS    . M A ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?    ? ? ?      ? ? ? ? ?
+2^ PE    M . A A A A A A A A A A A A A A A A A A ! ! ! ! ! !    M M M      ! ! ! ! !
+4+ JPG   A A . M M M M M M M M M M M M M M M M M M M M M M M    M M M      M M M M M
 .  .
 .  .     [the table could go on but would take too long to bruteforce]
 
-           X: automated     #: not bruteforced yet
-           M: manual        ?: likely possible
+           X: automated     ?: likely possible
+           M: manual        !: unknown
 ```
 
 - `*`: hack that relies on line comments with GhostScript - requires the parasite not to contain any new line, **after** encryption.
 - `^`: hack relying on overwritting the `Dos Header`, therefore restricting the parasite space to offsets `2`-`60`.
-- `+`: it should be 6 at first thought, but the last 2 bytes are the little endian length of the comment chunk,
-so it's possible to shrink that requirement to 5 bytes by increasing the first nibble.
-Ex: if the minimum encoded length is `01 4a` then you can make the parasite bigger to `02 XX` and make `XX` match the other content, which requires one byte less to bruteforce.
+- `+`: Signature, comment declaration and length takes all 2 bytes each, in total:
+  - to set an exact length, `6` bytes are required.
+  - the length is big endian, so you can round up the length and leave the lowest byte uncontrolled, requiring only `5` bytes.
+  - If the entire length is left undefined, and if your payload fits in the resulted encoded length after encryption, then only `4` bytes are required.
 
 
 # Notes

@@ -31,7 +31,7 @@ gcm_modulus_array = [1] + [0]*120 + [1, 0, 0, 0, 0, 1, 1, 1]
 gcm_modulus = bv.BitVector(bitlist = list(gcm_modulus_array))
 
 
-pad16 = lambda s: s + "\0" * (16-len(s))
+pad16 = lambda s: s + b"\0" * (16-len(s))
 b2a = lambda b: repr(b)[2:-1]
 
 
@@ -304,11 +304,11 @@ if __name__=='__main__':
 		help="input polyglot - requires special naming like 'P(10-5c).png.rar'.")
 	parser.add_argument('output',
 		help="generated file.")
-	parser.add_argument('-k', '--keys', nargs=2, default=["Now?", "L4t3r!!!"],
+	parser.add_argument('-k', '--keys', nargs=2, default=[b"Now?", b"L4t3r!!!"],
 		help="encryption keys - default: Now? / L4t3r!!!.")
-	parser.add_argument('-a', '--additional-data', default="MyVoiceIsMyPass!",
+	parser.add_argument('-a', '--additional-data', default=b"MyVoiceIsMyPass!",
 		help="Additional data - default: MyVoiceIsMyPass!.")
-	parser.add_argument('-n', '--nonce', default=0,
+	parser.add_argument('-n', '--nonce', default="0",
 		help="nonce - default: 0.")
 	parser.add_argument('-i', '--block-index', default=-1,
 		help="Specify block index - default: -1.")
@@ -322,13 +322,17 @@ if __name__=='__main__':
 	blockidx = args.block_index
 	nonce = args.nonce
 
-	key1 = pad16(unhextry(key1)).encode()
-	key2 = pad16(unhextry(key2)).encode()
+	key1 = pad16(unhextry(key1))
+	key2 = pad16(unhextry(key2))
+	print(repr(key1))
 	assert not key1 == key2
 
-	noncei = int(nonce)
-	nonceb = l2b(int(nonce),12)
-	ad = unhextry(ad).encode()
+	if nonce.startswith("0x"):
+		noncei = int(nonce, 16)
+	else:
+		noncei = int(nonce)
+	nonceb = l2b(noncei,12)
+	ad = unhextry(ad)
 	ad = pad(ad, BLOCKLEN)
 
 	# fnmix should come from Mitra and
