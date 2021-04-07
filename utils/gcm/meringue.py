@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives import hashes
 
 import base64
 import argparse
+import re
 
 
 DEBUG = True
@@ -59,6 +60,37 @@ for l in invert_data:
 	b = int(els[1], 16)
 	INVERTS[a] = b
 
+def xor(_a1, _a2):
+	assert len(_a1) == len(_a2)
+	return bytes([(_a1[i] ^ _a2[i]) for i in range(len(_a1))])
+
+
+noncesfn = os.path.join(dir_path, "nonces.txt")
+with open(noncesfn, "r") as f:
+	nonce_data = f.readlines()
+NONCES = {}
+for l in nonce_data:
+	if l.count("#") > 0:
+		l = l[:l.find("#")]
+	l = l.strip()
+	if l == "":
+		continue
+	l = re.split('\s+', l)
+	if len(l) != 6:
+		continue
+	nonce,types,header1, header2, key1, key2 = l
+	if len(header1) != len(header2):
+		continue
+	if len(key1) != len(key2):
+		continue
+	nonce = int(nonce, 16)
+	header1 = binascii.unhexlify(header1)
+	header2 = binascii.unhexlify(header2)
+	key1 = binascii.unhexlify(key1)
+	key2 = binascii.unhexlify(key2)
+	xor_hdr = xor(header1, header2)
+#	print(types.ljust(10), binascii.hexlify(xor_hdr).decode(), nonce)
+	NONCES[(xor_hdr, key1, key2)] = nonce
 
 def ifAdd(_a1, _a2):
 	return l2b(b2l(_a1) ^ b2l(_a2), 16)
@@ -66,11 +98,6 @@ def ifAdd(_a1, _a2):
 
 def ifAddL(_a1,_a2):
 	return l2b(_a1 ^ _a2, 16)
-
-
-def xor(_a1, _a2):
-	assert len(_a1) == len(_a2)
-	return bytes([(_a1[i] ^ _a2[i]) for i in range(len(_a1))])
 
 
 def pad(_d, _alig):
@@ -280,11 +307,6 @@ def getKS(key, nonce, bCount, initCount=2): # initCount = 2 for GCM, 0 for CTR
 	return stream
 
 
-def xor(a1, a2):
-	assert len(a1) == len(a2)
-	return bytes([(a1[i] ^ a2[i]) for i in range(len(a1))])
-
-
 def mix(d1, d2, l):
 	assert len(d1) == len(d2)
 	mix = b""
@@ -317,6 +339,7 @@ if __name__=='__main__':
 
 	fnmix = args.polyglot
 	fnpoc = args.output
+	key1, key2 = b"\x01" * 16, b"\x02" * 16
 	key1, key2 = args.keys
 	ad = args.additional_data
 	blockidx = args.block_index
@@ -350,6 +373,11 @@ if __name__=='__main__':
 
 		hdr2 = dIn[:len(hdr1)]
 		hdr_xor = xor(hdr1,hdr2)
+		t = (hdr_xor, key1, key2)
+		if t in NONCES:
+			nonce = NONCES[t]
+			print("Nonce already computed.")
+			return nonce
 		hdr_xor_l = len(hdr_xor)
 		aes1 = AES.new(key1, AES.MODE_ECB)
 		aes2 = AES.new(key2, AES.MODE_ECB)
@@ -372,7 +400,7 @@ if __name__=='__main__':
 		nonce = "%i" % noncei
 		nonceb = l2b(noncei,12)
 
-		print("Bruteforced nonce: %x" % noncei)
+		print("Nonce: %x" % noncei)
 
 	dIn = pad(dIn, BLOCKLEN) # the padding will break with formats not supporting appended data
 
