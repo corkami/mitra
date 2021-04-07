@@ -1,9 +1,11 @@
-# 2021/02/19 v0.3
+# 2021/04/07 v0.3
 
 New:
 - overlapping polyglots (flag '-o')
  - generic
- - specific for PE
+ - PE specific
+ - JPEG specific with 5 or 4 bytes and postprocessing
+ - nonce DB
 - support w/ parasite: WAD
 - tool: [AES-CTR exploit](utils/ctr/README.md)
 - PostScript:

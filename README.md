@@ -152,7 +152,7 @@ Minimal start offset
 
 1* PS    . M A ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?    ? ? ?      ? ? ? ? ?
 2^ PE    M . A A A A A A A A A A A A A A A A A A ! ! ! ! ! !    M M M      ! ! ! ! !
-4+ JPG   A A . M M M M M M M M M M M M M M M M M M M M M M M    M M M      M M M M M
+4+ JPG   A A . A A A A A A A A A A A A A A A A A A A A A A A    A A A      A A A A A
 .  .
 .  .     [the table could go on but would take too long to bruteforce]
 

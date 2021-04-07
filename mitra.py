@@ -105,7 +105,7 @@ def isCavOk(ftype1, ftype2):
 		result = False
 
 	if not ftype2.precav_s:
-		dprint("! File type 2 (%s) doesn't have with any cavity." % (ftype2.TYPE))
+		dprint("! File type 2 (%s) doesn't start with any cavity." % (ftype2.TYPE))
 		return False
 	elif filling_l > ftype2.precav_s:
 		dprint("! File 1 is too big (0x%X). File 2's cavity is only 0x%X." % (filling_l, ftype2.precav_s) )

@@ -114,9 +114,9 @@ if __name__=='__main__':
 
 	dOut = mix(dCrypt1, dCrypt2, swaps)
 
-	key1_s = b2a(binascii.hexlify(key1.strip())).rstrip("00")
-	key2_s = b2a(binascii.hexlify(key2.strip())).rstrip("00")
-	iv_s = b2a(binascii.hexlify(nonceb)).rstrip("00")
+	key1_s = b2a(binascii.hexlify(key1.strip()))
+	key2_s = b2a(binascii.hexlify(key2.strip()))
+	iv_s = b2a(binascii.hexlify(nonceb))
 	if iv_s == "":
 		iv_s = "0"
 

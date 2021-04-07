@@ -76,6 +76,47 @@ for l in [
 ]:
 	All.extend([" "] + l)
 
+# 1:PS 2:PE 5:JPG 8:Flac/MP4/TIFF 9:FLV/Java 12:WAD/WASM 16:BPG/GIF/GZ/NES/PNG
+# 20:ID3v2/RIFF 23:RTF 26:BMP 28:CPIO/OGG 30:Zip 32:ILDA 34:PSD 36:CAB
+# 40:JP2/PCAPNG 48:PDF 64:ELF 68:AR 94:PCAP 112:ICO 132:ICC 352:DCM 512:TAR
+
+Offsets = [
+	[  1: "PS"],
+	[  2: "PE"],
+	[  5: "JPG"],
+	[  8: "Flac"],
+	[  8: "MP4"],
+	[  8: "TIFF"],
+	[  9: "FLV"],
+	[ 12: "WAD"],
+	[ 12: "WASM"],
+	[ 16: "BPG"],
+	[ 16: "GIF"],
+	[ 16: "GZ"],
+	[ 16: "NES"],
+	[ 16: "PNG"],
+	[ 20: "ID3v2"],
+	[ 20: "RIFF"],
+	[ 23: "RTF"],
+	[ 26: "BMP"],
+	[ 28: "CPIO"],
+	[ 28: "OGG"],
+	[ 30: "Zip"],
+	[ 32: "ILDA"],
+	[ 34: "PSD"],
+	[ 36: "CAB"],
+	[ 40: "JP2"],
+	[ 40: "PCAPNG"],
+	[ 48: "PDF"],
+	[ 64: "ELF"],
+	[ 68: "AR"],
+	[ 94: "PCAP"],
+	[112: "ICO"],
+	[132: "ICC"],
+	[144: "DCM"],
+	[226: "Java"],
+	[512: "TAR"],
+]
 
 lines = list([None]*5)
 
