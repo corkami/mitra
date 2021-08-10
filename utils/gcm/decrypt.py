@@ -59,10 +59,10 @@ if __name__=='__main__':
 	fname = os. path.splitext(fname)[0] # remove file extension
 
 	exts = exts.split(" ")[-2:]
-	with open("%s.%s.%s" % (fname, hash, exts[0]), "wb") as file1:
+	with open("%s-1.%s.%s" % (fname, hash, exts[0]), "wb") as file1:
 		file1.write(plaintxt1)
 
-	with open("%s.%s.%s" % (fname, hash, exts[1]), "wb") as file2:
+	with open("%s-2.%s.%s" % (fname, hash, exts[1]), "wb") as file2:
 		file2.write(plaintxt2)
 
 	print("key1:", key1.rstrip(b"\0"))
