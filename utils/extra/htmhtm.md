@@ -61,17 +61,51 @@ Creating '(4-26)7.d3f286cd.htm.htm'
 
 ### Result (ambiguous html file)
 
-In hex:
+
+#### Walkthrough
+
+Comment and swap offset 1:
 ```
- 00000000:  3C 21 2D 2D 2D 2D 3E 3C 68 74 6D 6C 3E 48 65 6C  <!----><html>Hel   << top file
- 00000010:  6C 6F 20 57 6F 72 6C 64 21 3C 2F 68 74 6D 6C 3E  lo World!</html>
- 00000020:  0D 0A 3C 21 2D 2D 2D 2D 3E 3C 68 74 6D 6C 3E 3C    <!----><html><   << bottom file
- 00000030:  61 20 68 72 65 66 3D 22 68 74 74 70 3A 2F 2F 77  a href="http://w
- 00000040:  77 77 2E 65 76 69 6C 2E 63 6F 6D 22 3E 43 6C 69  ww.evil.com">Cli
- 00000050:  63 6B 20 68 65 72 65 21 3C 2F 61 3E 3C 2F 68 74  ck here!</a></ht
- 00000060:  6D 6C 3E 3C 21 2D 2D 00 00 00 00 00 00 00 00 00  ml><!--            << padding
- 00000070:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00                     << block for tag correction
+000:   <  !  -  -
+                 | swap offset
+  4:  .. .. .. ..  -  -  >
 ```
+
+Top file:
+```
+  7:  .. .. .. .. .. .. ..  <  h  t  m  l  >  H  e  l
+010:   l  o     W  o  r  l  d  !  <  /  h  t  m  l  > 
+020:  \r \n
+```
+
+Comment and cut 2:
+```
+ 22:  .. ..  <  !  -  -
+                       | swap offset
+ 26:  .. .. .. .. .. ..  -  -  >
+```
+
+Bottom file:
+```
+ 29:  .. .. .. .. .. .. .. .. ..  <  h  t  m  l  >  <
+030:   a     h  r  e  f  =  "  h  t  t  p  :  /  /  w
+040:   w  w  .  e  v  i  l  .  c  o  m  "  >  C  l  i
+050:   c  k     h  e  r  e  !  <  /  a  >  <  /  h  t
+060:   m  l  >
+```
+
+Padding:
+```
+ 63:  .. .. ..  <  !  -  - 00 00 00 00 00 00 00 00 00
+```
+
+Tag correction:
+```
+070:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+```
+
+
+#### Layout
 
 In text (minus padding):
 ```
@@ -138,33 +172,60 @@ plaintext2: b'7cfaa9b52d2d3e3c68746d6c3e48656c' ...
 
 ### Results (payload)
 
-`attack-1.7b2a3b1d.htm`:
 
+#### `attack-1.7b2a3b1d.htm`
+
+Commented out ciphertext (top file):
 ```
-00000000:  3C 21 2D 2D E4 04 01 D3 D0 C2 85 FB E1 66 15 EA  <!--Σ  ╙╨┬à√ßf Ω
-00000010:  7C 5D 12 E7 BD 42 56 80 D1 0A 7D 5E 88 BE 24 AD  |] τ╜BVÇ╤ }^ê╛$¡
-00000020:  2E F2 A0 A5 00 9A                                .≥áÑ Ü          
-      +6:  .. .. .. .. .. .. 2D 2D 3E 3C 68 74 6D 6C 3E 3C        --><html><    << bottom file
-00000030:  61 20 68 72 65 66 3D 22 68 74 74 70 3A 2F 2F 77  a href="http://w
-00000040:  77 77 2E 65 76 69 6C 2E 63 6F 6D 22 3E 43 6C 69  ww.evil.com">Cli
-00000050:  63 6B 20 68 65 72 65 21 3C 2F 61 3E 3C 2F 68 74  ck here!</a></ht
-00000060:  6D 6C 3E 3C 21 2D 2D                             ml><!--         
-      +7:  .. .. .. .. .. .. .. 00 00 00 00 00 00 00 00 00                      << padding
-00000070:  97 66 DA A7 E2 4C 2D 67 C6 CE BB 87 C1 02 D7 16  ùf┌ºΓL-g╞╬╗ç┴ ╫     << tag correction
+000:   <  !  -  - E4 04 01 D3 D0 C2 85 FB E1 66 15 EA
+010:  7C 5D 12 E7 BD 42 56 80 D1 0A 7D 5E 88 BE 24 AD
+020:  2E F2 A0 A5 00 9A  -  -  >
 ```
 
-`attack-2.7b2a3b1d.htm`:
-
+Bottom file:
 ```
-00000000:  7C FA A9 B5                                      |·⌐╡            
-      +4:  .. .. .. .. 2D 2D 3E 3C 68 74 6D 6C 3E 48 65 6C      --><html>Hel    << top file
-00000010:  6C 6F 20 57 6F 72 6C 64 21 3C 2F 68 74 6D 6C 3E  lo World!</html>
-00000020:  0D 0A 3C 21 2D 2D                                  <!--          
-      +6:                    DB 15 FD 8A 87 3D FB 47 11 D6        █ ²èç=√G ╓
-00000030:  28 37 F6 85 67 72 CB 13 24 6C 30 52 40 1E D7 D9  (7÷àgr╦ $l0R@ ╫┘
-00000040:  01 C4 21 A9 03 F5 CA 96 B3 58 EB BE A5 6E 84 62   ─!⌐ ⌡╩û│Xδ╛Ñnäb
-00000050:  30 A6 11 EA A6 D8 0D DF 52 E5 34 76 65 7C C3 31  0ª Ωª╪ ▀Rσ4ve|├1
-00000060:  CE 5B 68 CF A8 8C 33 A6 8D E2 F8 8C 19 97 C0 3F  ╬[h╧¿î3ªìΓ°î ù└?
+ 29:  .. .. .. .. .. .. .. .. ..  <  h  t  m  l  >  <
+030:   a     h  r  e  f  =  "  h  t  t  p  :  /  /  w
+040:   w  w  .  e  v  i  l  .  c  o  m  "  >  C  l  i
+050:   c  k     h  e  r  e  !  <  /  a  >  <  /  h  t
+060:   m  l  >  <  !  -  -
+```
 
-00000070:  84 D3 61 88 2B 93 E4 89 EF D9 09 28 2E 38 53 50  ä╙aê+ôΣë∩┘ (.8SP    << tag correction
+Padding:
+```
+ 67:  .. .. .. .. .. .. .. 00 00 00 00 00 00 00 00 00
+```
+
+Tag correction:
+```
+070:  97 66 DA A7 E2 4C 2D 67 C6 CE BB 87 C1 02 D7 16
+```
+
+
+#### `attack-2.7b2a3b1d.htm`
+
+Commented out ciphertext (comment start):
+```
+000:  7C FA A9 B5  -  -  >                             
+```
+
+Top file:
+```
+  7:  .. .. .. .. .. .. ..  <  h  t  m  l  >  H  e  l  
+010:   l  o     W  o  r  l  d  !  <  /  h  t  m  l  >
+020:  \r \n
+```
+
+Commented out ciphertext (bottom file and padding):
+```
+ 22:  .. ..  <  !  -  - DB 15 FD 8A 87 3D FB 47 11 D6
+030:  28 37 F6 85 67 72 CB 13 24 6C 30 52 40 1E D7 D9
+040:  01 C4 21 A9 03 F5 CA 96 B3 58 EB BE A5 6E 84 62
+050:  30 A6 11 EA A6 D8 0D DF 52 E5 34 76 65 7C C3 31
+060:  CE 5B 68 CF A8 8C 33 A6 8D E2 F8 8C 19 97 C0 3F
+```
+
+Tag correction
+```
+070:  84 D3 61 88 2B 93 E4 89 EF D9 09 28 2E 38 53 50
 ```
