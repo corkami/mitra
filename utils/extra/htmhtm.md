@@ -64,7 +64,7 @@ Creating '(4-26)7.d3f286cd.htm.htm'
 
 #### Walkthrough
 
-Comment and swap offset 1:
+Comments markers and swap offset 1:
 ```
 000:   <  !  -  -
                  | swap offset
@@ -78,7 +78,7 @@ Top file:
 020:  \r \n
 ```
 
-Comment and cut 2:
+Comments markers and swap offset 2:
 ```
  22:  .. ..  <  !  -  -
                        | swap offset
