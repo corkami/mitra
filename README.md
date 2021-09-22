@@ -214,8 +214,8 @@ XML        | `<![CDATA[` `]]>` |           |
 You may want to make room for a specific buffer size to encode a multiline comment via the length declaration of the comment.
 For example in MP4, where the file starts with the length of the first atom.
 
-# Notes
 
+# Notes
 
 ## File formats
 
@@ -243,3 +243,18 @@ C(66)-PNG-DICOM.7e22f58e.dcm.png: PNG image data, 13 x 7, 1-bit colormap, non-in
 - DICOM medical imaging data
 - data
 ```
+
+
+# Related documentation
+
+Paper:
+- [How to Abuse and Fix Authenticated Encryption Without Key Commitment](https://eprint.iacr.org/2020/1456), Nov 2020, Jun 2021.
+  Ange Albertini, [Thai Duong](https://twitter.com/XorNinja), Shay Gueron, [Stefan Kölbl](https://twitter.com/kste_), Atul Luykx, [Sophie Schmieg](https://twitter.com/SchmiegSophie)
+
+Talks:
+- **TimeCryption - clean now, malicious later** (DEFCON CH 2021) w/ [Stefan Kölbl](https://twitter.com/kste_),
+[slides](https://speakerdeck.com/ange/timecryption) /
+[video](https://www.youtube.com/watch?v=liancIA1m9w)
+- **Generating weird files - an introduction to Mitra** (Pass the Salt 2021)
+[slides](https://speakerdeck.com/ange/generating-weird-files) /
+[video](https://www.youtube.com/watch?v=96FiTaAiUk8&t=7877s)
