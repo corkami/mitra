@@ -31,8 +31,7 @@ where the payloads switch side at offsets `0x80`, `0x162` and `0x286`.
 The `-s` option extracts the 2 payloads separately, mixed with pseudo-random bytes
 (it doesn't fix checksums afterwards).
 
-Mitra doesn't generate crypto-polyglots or any polyglots with overlapping bytes,
-but it can definitely help to craft them.
+Mitra can generate near-polyglots (with overlapping bytes) with the `--overlap` parameter.
 
 
 # Goals
@@ -128,11 +127,14 @@ Formats combinations: 286
 Notes that some formats are containers and apply to several file types.
 
 
-## Overlap polyglots
+## Near polyglots
 
 With the `--overlap` option (disabled by default), filetypes starting at the same offsets can be combined.
 
-The overwritten content might be restored via any operation, such as decryption via specific bruteforced parameters (CBC, GCM...), and is stored in the filename between curly brakets. Ex: `O(5-204){424D4E0100}.bmp.jpg`
+The overwritten content might be restored via any operation,
+such as decryption via specific bruteforced parameters (CBC, GCM...),
+and is stored in the filename between curly brakets.
+Ex: `O(5-204){424D4E0100}.bmp.jpg`
 
 Since it's pure bruteforcing, it's not practical if the filetype requires too many bytes to be restored.
 
@@ -167,6 +169,50 @@ Minimal start offset
   - the length is big endian, so you can round up the length and leave the lowest byte uncontrolled, requiring only `5` bytes.
   - If the entire length is left undefined, and if your payload fits in the resulted encoded length after encryption, then only `4` bytes are required.
 
+
+# Script polyglots
+
+Some script language (JavaScript, HTML, PHP, Ruby...) tolerate binary contents and can be combined with binary formats.
+
+Typical exploits target browser-supported formats such as images, GZip, Flash, Mp3...
+
+Mitra can be used to make room in a binary file.
+
+There are different strategies for these polyglots:
+- *Multiline comments* such as `*/ <JavaScript> /*` in the middle 
+- [Here document](https://en.wikipedia.org/wiki/Here_document): In this case, you might want to use the format magic to define a dummy variable with the format magics. For example, `MZ = << HereMarker` in the `DOS Header` of a Portable Executable.
+- Terminators can also be used to make sure that the rest of the file is ignored.
+
+<!-- csvtable
+Language|ML Comments|Here doc.|Terminator
+HTML|`<\!--` `--\>`||
+JavaScript|`/*` `*/`||
+Perl|`=pod` `=cut`|`<<`|`__END__`
+PHP|`/*` `*/`|`<<`|
+PostScript|`/{(` `)}`||`stop`
+PowerShell|`<#` `#>`|`@"`|
+Python||`"\""`|
+Ruby|`=begin` `=end`|`<<`|`__END__`
+Shell||`<<`|
+XML|`<![CDATA[` `]]>`||
+-->
+
+Language   | ML Comments       | Here doc. | Terminator
+---------- | ----------------- | --------- | ----------
+HTML       | `<!--` `-->`      |           |
+JavaScript | `/*` `*/`         |           |
+Perl       | `=pod` `=cut`     | `<<`      | `__END__`
+PHP        | `/*` `*/`         | `<<`      |
+PostScript | `/{(` `)}`        |           | `stop`
+PowerShell | `<#` `#>`         | `@"`      |
+Python     |                   | `"""`     |
+Ruby       | `=begin` `=end`   | `<<`      | `__END__`
+Shell      |                   | `<<`      |
+XML        | `<![CDATA[` `]]>` |           |
+
+
+You may want to make room for a specific buffer size to encode a multiline comment via the length declaration of the comment.
+For example in MP4, where the file starts with the length of the first atom.
 
 # Notes
 
