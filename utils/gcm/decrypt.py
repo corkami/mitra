@@ -29,15 +29,21 @@ if __name__=='__main__':
 	with open(fname, "rb") as f:
 		lines = f.readlines()
 
+	exts = "bin bin"
 	for line in lines:
 		line = line.strip()
 		l = line.split(b": ")
+		# strip binary markers
 		if l[1].startswith(b"b'") and l[1][-1] == 39:
 			l[1] = l[1][2:-1]
-		vars()[l[0].decode("utf-8").lower()] = l[1].strip().decode("utf-8")
+		varname = l[0].decode("utf-8").lower()
+		value = l[1].strip().decode("utf-8")
+
+		if varname == "additionaldata":
+			varname = "adata"
+		vars()[varname] = value
 
 	for v in ["key1", "key2", "adata", "nonce", "ciphertext", "tag"]:
-		#TODO: sometimes it's 'additionaldata'
 		vars()[v] = binascii.unhexlify(vars()[v])
 
 	assert not key1 == key2
@@ -56,7 +62,7 @@ if __name__=='__main__':
 
 	hash = hashlib.sha256(ciphertext).hexdigest()[:8].lower()
 
-	fname = os. path.splitext(fname)[0] # remove file extension
+	fname = os.path.splitext(fname)[0] # remove file extension
 
 	exts = exts.split(" ")[-2:]
 	with open("%s-1.%s.%s" % (fname, hash, exts[0]), "wb") as file1:
