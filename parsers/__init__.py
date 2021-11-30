@@ -38,9 +38,10 @@ __all__ = [
 
 
 class FType(object):
+	DESC = "Short name / Full name"
+	TYPE = "Extension"
 
 	def __init__(self, data=""):
-		self.type = ""
 		self.data = data
 
 		self.cut = None         # minimal cut generic to that format - updated by getCut
@@ -148,6 +149,8 @@ class FType(object):
 			return None, []
 
 		wrapped = self.wrap(parasite)
+		if wrapped is None:
+			return None, []
 		delta = len(wrapped)
 		swaps = [
 			cut + prewrap_s,
