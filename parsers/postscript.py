@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from args import *
 from parsers import FType
 
 class parser(FType):
@@ -41,7 +42,10 @@ class parser(FType):
 		if bEnd:
 			return b"stop\r\n" + data
 
-		if self.validate(data) == False:
+		val_pos = self.validate(data)
+		if val_pos != -1:
+			if getVar("VERBOSE"):
+				dprint("PostScript: parasite data (length %i) invalid at offset %i: ...%s..." % (len(data), val_pos, repr(data[val_pos - 2:val_pos+2])[2:-1]))
 			return None
 		wrapped = b"".join([
 			self.PREWRAP,      
@@ -55,44 +59,45 @@ class parser(FType):
 def bBalancedPar(p):
 	"""check if parenthesis are balanced no matter the content"""
 	l = 0
-	for c in p:
+	for i, c in enumerate(p):
 		if c == ord(b"("):
 			l += 1
 		elif c == ord(b")"):
 			l -= 1
 			if l < 0:
-				return False
+				return i
 
 	if l != 0:
-		return False
-	return True
+		return i + 1
+	return -1
 
-assert bBalancedPar(b"") == True
-assert bBalancedPar(b"(") == False
-assert bBalancedPar(b")") == False
-assert bBalancedPar(b"()") == True
-assert bBalancedPar(b"())") == False
-assert bBalancedPar(b"())") == False
-assert bBalancedPar(b"dcjdkwj(wljcwk)cwkejcwek") == True
-assert bBalancedPar(b"dcjdkwj(wljcwk)cwkejcwe)") == False
-assert bBalancedPar(b"(dcjdkwj(wljcwk)wkejcwek") == False
-assert bBalancedPar(b"(dcjdkwj(wljcwk)wkejcwe)") == True
+assert bBalancedPar(b"") == -1
+assert bBalancedPar(b"(") == 1
+assert bBalancedPar(b")") == 0
+assert bBalancedPar(b"()") == -1
+assert bBalancedPar(b"())") == 2
+assert bBalancedPar(b"(()") == 3
+assert bBalancedPar(b"dcjdkwj(wljcwk)cwkejcwek") == -1
+assert bBalancedPar(b"dcjdkwj(wljcwk)cwkejcw)k") == 22
+assert bBalancedPar(b"dcjdkwj(wljcwk)cwkejcwe)") == 23
+assert bBalancedPar(b"(dcjdkwj(wljcwk)wkejcwek") == 24
+assert bBalancedPar(b"(dcjdkwj(wljcwk)wkejcwe)") == -1
 
 
 # for inline comments parasites
 def bNoNL(p):
 	"""check if contains any RC, NL or FF chars"""
-	for c in p:
+	for i, c in enumerate(p):
 		if c in [0xA, 0xC, 0xD]:
-			return False
-	return True
+			return i
+	return -1
 
-assert bNoNL(b"") == True
-assert bNoNL(b"\x0a") == False
-assert bNoNL(b"\x0c") == False
-assert bNoNL(b"\x0d") == False
-assert bNoNL(b" \x0d ") == False
+assert bNoNL(b"") == -1
+assert bNoNL(b"\x0a") == 0
+assert bNoNL(b"\x0c") == 0
+assert bNoNL(b"\x0d") == 0
+assert bNoNL(b" \x0d ") == 1
 assert bNoNL(
 	bytes([i for i in range(0,0xA)]) +
 	bytes([i for i in range(0xE,256)])
-	) == True
+	) == -1
