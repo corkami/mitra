@@ -11,7 +11,7 @@ import os
 import sys
 
 
-# number of blocks to be appended to the PE inside the PDF
+# number of blocks to be appended to the parasite inside the PDF
 BLOCKCOUNT = 2
 
 
@@ -29,15 +29,16 @@ print(" * merging host with a dummy page") #####################################
 
 with fitz.open() as mergedDoc:
 
-	with fitz.open("pdf", dummy) as dummyDoc:
-		mergedDoc.insertPDF(dummyDoc)
+	with fitz.open() as blankdoc:
+		blankdoc._newPage()
+		mergedDoc.insertPDF(blankdoc)
 
 	with fitz.open(sys.argv[1]) as inDoc:
+		mergedDoc.insertPDF(inDoc)
 		toc = inDoc.getToC(simple=False)
 		pagemode = getValDecl(inDoc.write(), b"/PageMode")
-		toc = adjustToC(toc)
-		mergedDoc.insertPDF(inDoc)
-	mergedDoc.setToC(toc)
+	adj_toc = adjustToC(toc)
+	mergedDoc.setToC(adj_toc)
 	dm = mergedDoc.write()
 
 	if 0: mergedDoc.save("_1merged.pdf")
