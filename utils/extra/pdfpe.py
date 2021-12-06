@@ -38,8 +38,10 @@ payload_l = len(payload) - 46 # minimal PDF header length
 print(" * normalizing, merging with a dummy page") #############################
 
 with fitz.open() as mergedDoc:
-	with fitz.open("pdf", dummy) as dummyDoc:
-		mergedDoc.insertPDF(dummyDoc)
+
+	with fitz.open() as blankdoc:
+		blankdoc._newPage()
+		mergedDoc.insertPDF(blankdoc)
 
 	with fitz.open(sys.argv[1]) as inDoc:
 		if _DEBUG: inDoc.save("_0normalized.pdf")
