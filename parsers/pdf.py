@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 
-from parsers import FType
+import fitz # PyMuPDF
 import os
+import re
+from parsers import FType
 
-mutool = "mutool"
+# Strategy:
+# 1. merge with a dummy single page doc to make room for an empty stream object at slot 1
+#      This operations kills ToC, which need to be transferred and adjusted because of the dummy page.
+# 2. overwrite first 4 object with a specific template to make sure offsets are correct
+# 3. inject the payload at a fixed offset
+# 4. update the payload length
+# 5. update Xref and startxref offsets
 
 
 def EnclosedString(d, starts, ends):
 	off = d.find(starts) + len(starts)
 	return d[off:d.find(ends, off)]
+
+assert EnclosedString(b"/Kids[1 0 R]", b"/Kids[", b"]") == b"1 0 R"
 
 
 def getCount(d):
@@ -16,14 +26,57 @@ def getCount(d):
 	count = int(s)
 	return count
 
+assert getCount(b"/Count 314 /") == 314
+
+
+def getObjDecl(d, s):
+	val = EnclosedString(d, s, b"0 R")
+	val = val.strip()
+	if val.decode().isnumeric():
+		return b"%s %s 0 R" % (s, val)
+	else:
+		return b""
+
+assert getObjDecl(b"/Outlines 1 0 R", b"/Outlines") == b"/Outlines 1 0 R"
+
+
+def getValDecl(d, s):
+	"""locates declaration such as '/PageMode /UseOutlines' """
+	off = d.find(s) + len(s)
+	if off == -1:
+		return b""
+	match = re.match(b" *\/[A-Za-z0-9]*", d[off:])
+	if match is None:
+		return b""
+	else:
+		return b"%s %s" % (s, match[0])
+
+assert getValDecl(b"/PageMode/UseOutlines", b"/PageMode") == b"/PageMode /UseOutlines"
+
+
+
+def adjustToC(toc):
+	"""increasing page numbers of each ToC entry"""
+	for entry in toc:
+		d = entry[3]
+		if d["kind"] == 1:
+			d["page"] += 1
+			entry[2] += 1
+	return toc
+
+assert adjustToC([[0, 'Bookmark', 1, {'kind': 1, 'page': 25}]]) == [[0, 'Bookmark', 2, {'kind': 1, 'page': 26}]]
+
+
+# This template starts the parasite at offset 0x30, which is a reasonable minimum.
+# The dummy /Payload is to prevent garbage collection - remove to clean your file.
+# the `extra` parameter will contain optional declarations of optional PDF catalog elements:
+#   /Names, /OpenAction, /Outlines, /PageMode
 
 template = b"""%%PDF-1.3
-%%\xC2\xB5\xC2
-
+%%\xC2\xB5\xC2\xB6
 1 0 obj
 <</Length 2 0 R>>
 stream
-
 endstream
 endobj
 
@@ -35,11 +88,17 @@ endobj
 <<
   /Type /Catalog
   /Pages 4 0 R
+	/Payload 1 0 R
+	%(extra)s
 >>
 endobj
 
 4 0 obj
-<</Type/Pages/Count %(count)i/Kids[%(kids)s]>>
+<<
+  /Type /Pages
+  /Count %(count)i
+  /Kids[%(kids)s]
+>>
 endobj
 """
 
@@ -62,7 +121,7 @@ class parser(FType):
 		self.parasite_o = 0x30
 		self.parasite_s = 0xFFFFFFFF
 
-# Doesn't apply the usual way
+		# Doesn't apply the usual way
 		self.cut = 0x30
 
 
@@ -113,41 +172,64 @@ class parser(FType):
 
 
 	def normalize(self):
-		with open("host.pdf", "wb") as f:
-			f.write(self.data)
+		_DEBUG_FILES = 0
 
-		# merging with a dummy page (mutool)
-		rval = os.system(mutool + ' merge -o merged.pdf blank.pdf host.pdf')
-		if rval != 0:
-			print("Error. Is mutool installed?")
-		os.remove('host.pdf')
+		# Merging with a dummy page
+		with fitz.open() as mergedDoc:
 
-		with open("merged.pdf", "rb") as f:
-			dm = f.read()
-		os.remove('merged.pdf')
+			with fitz.open() as blankdoc:
+				blankdoc._newPage()
+				mergedDoc.insertPDF(blankdoc)
 
-		# removing dummy page reference
-		count = getCount(dm) - 1
+			with fitz.open(stream=self.data, filetype="pdf") as inDoc:
+				if _DEBUG_FILES: inDoc.save("_0normalized.pdf")
 
-		kids = EnclosedString(dm, b"/Kids[", b"]")
+				pagemode = getValDecl(inDoc.write(), b"/PageMode")
 
-		# we skip the first dummy that should be 4 0 R because of the `mutool merge`
-		assert kids.startswith(b"4 0 R ")
-		kids = kids[6:]
+				toc = inDoc.getToC(simple=False)
+				toc = adjustToC(toc)
+
+				mergedDoc.insertPDF(inDoc)
+
+			mergedDoc.setToC(toc)
+			merged_data = mergedDoc.write()
+			if _DEBUG_FILES: mergedDoc.save("_1merged.pdf")
+
+		# Removing dummy page reference
+		count = getCount(merged_data) - 1
+
+
+		outlines = getObjDecl(merged_data, b"/Outlines")
+		names = getObjDecl(merged_data, b"/Names")
+		openaction = getObjDecl(merged_data, b"/OpenAction")
+
+		extra = outlines + names + openaction + pagemode
+
+
+		# we skip the first dummy page that should be 4 0 R
+		kids = EnclosedString(merged_data, b"/Kids[", b"]")
+		RefObj4 = b"4 0 R "
+		assert kids.startswith(RefObj4)
+		kids = kids[len(RefObj4):]
+
+		body = merged_data[merged_data.find(b"5 0 obj"):]
 
 		# fixing object references
-		dm = dm[dm.find(b"5 0 obj"):]
-		dm = dm.replace(b"/Parent 2 0 R", b"/Parent 4 0 R")
-		dm = dm.replace(b"/Root 1 0 R", b"/Root 3 0 R")
+		body = body.replace(b"/Parent 2 0 R", b"/Parent 4 0 R") # one per page
+		body = body.replace(b"/Root 1 0 R", b"/Root 3 0 R") # one in the trailer
 
 		# need this to map b'payload' to the payload var ...?
 		mapping = {}
-		for s in ("count", "kids"):
+		for s in (
+			"count",
+			"kids",
+			"extra",
+			):
 			mapping[s.encode()] = locals()[s]
 
-		# aligning payload header
-		stage1 = template % mapping
+		templated = template % mapping
 
-		contents = (template % mapping) + dm
+		# Make sure the cut is at the right offfset
+		assert templated[41:41+16] == b"stream\nendstream"
 
-		self.data = contents
+		self.data = templated + body
