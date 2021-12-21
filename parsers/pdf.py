@@ -81,7 +81,7 @@ endstream
 endobj
 
 2 0 obj
-_PAYLOADL_
+(PAYLOADL)
 endobj
 
 3 0 obj
@@ -163,7 +163,7 @@ class parser(FType):
 		contents = contents[:startStartXref] + b"%i" % startXREF + contents[endStartXref:]
 
 		# offset @ cut + delta + 0x1C
-		contents = contents.replace(b"_PAYLOADL_", b"%010i" % delta)
+		contents = contents.replace(b"(PAYLOADL)", b"%010i" % delta)
 
 		# FIXME: find out why wrappending is one byte too long
 		contents = contents[:-1]
