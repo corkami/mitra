@@ -179,19 +179,19 @@ class parser(FType):
 
 			with fitz.open() as blankdoc:
 				blankdoc._newPage()
-				mergedDoc.insertPDF(blankdoc)
+				mergedDoc.insert_pdf(blankdoc)
 
 			with fitz.open(stream=self.data, filetype="pdf") as inDoc:
 				if _DEBUG_FILES: inDoc.save("_0normalized.pdf")
 
 				pagemode = getValDecl(inDoc.write(), b"/PageMode")
 
-				toc = inDoc.getToC(simple=False)
+				toc = inDoc.get_toc(simple=False)
 				toc = adjustToC(toc)
 
-				mergedDoc.insertPDF(inDoc)
+				mergedDoc.insert_pdf(inDoc)
 
-			mergedDoc.setToC(toc)
+			mergedDoc.set_toc(toc)
 			merged_data = mergedDoc.write()
 			if _DEBUG_FILES: mergedDoc.save("_1merged.pdf")
 
