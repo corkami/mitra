@@ -192,7 +192,7 @@ class parser(FType):
 				mergedDoc.insert_pdf(inDoc)
 
 			mergedDoc.set_toc(toc)
-			merged_data = mergedDoc.write()
+			merged_data = mergedDoc.write(no_new_id=True) # remove randomness
 			if _DEBUG_FILES: mergedDoc.save("_1merged.pdf")
 
 		# Removing dummy page reference
