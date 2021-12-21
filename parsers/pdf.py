@@ -182,6 +182,7 @@ class parser(FType):
 				mergedDoc.insert_pdf(blankdoc)
 
 			with fitz.open(stream=self.data, filetype="pdf") as inDoc:
+				metadata = inDoc.metadata
 				if _DEBUG_FILES: inDoc.save("_0normalized.pdf")
 
 				pagemode = getValDecl(inDoc.write(), b"/PageMode")
@@ -192,6 +193,7 @@ class parser(FType):
 				mergedDoc.insert_pdf(inDoc)
 
 			mergedDoc.set_toc(toc)
+			mergedDoc.set_metadata(metadata)
 			merged_data = mergedDoc.write(no_new_id=True) # remove randomness
 			if _DEBUG_FILES: mergedDoc.save("_1merged.pdf")
 
