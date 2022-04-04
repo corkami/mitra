@@ -23,7 +23,7 @@ and the formats [repository](https://github.com/corkami/formats/tree/WIP) for so
 It tries different layouts:
 Stacks (appended data), Cavities (blank space), Parasites (comments), Zippers (mutual comments).
 
-It returns the offsets where the payloads 'switch sizes' for multi-ciphertexts.
+It stores the offsets where the payloads 'switch sizes' between parenthesis for ambiguous ciphertexts.
 
 Ex: `Z(80-162-286)-DICOM^TIFF.be3b767b.dcm.tif` is a DICOM/TIFF zipper
 where the payloads switch side at offsets `0x80`, `0x162` and `0x286`.
@@ -32,6 +32,7 @@ The `-s` option extracts the 2 payloads separately, mixed with pseudo-random byt
 (it doesn't fix checksums afterwards).
 
 Mitra can generate near-polyglots (with overlapping bytes) with the `--overlap` parameter.
+It stores the overlap data between curly braces of the output file - for example, `O(d-40a){4D5A}.wasm.exe`.
 
 
 # Goals
@@ -215,6 +216,88 @@ You may want to make room for a specific buffer size to encode a multiline comme
 For example in MP4, where the file starts with the length of the first atom.
 
 
+# Mocky
+
+Mocky is a script to generates polymocks.
+
+It turn valid files into polymocks by inserting mock signature of other file types at the right offset, if possible.
+These polymocks might then be detected as something else while retaining their initial validity, depending on the detection engine.
+
+The `--combine` parameters tries to fit as many signatures as accepted by the target file format.
+
+
+## Example
+
+1. Take a standard PDF file.
+
+```
+$ file pdf.pdf
+pdf.pdf: PDF document, version 1.3
+```
+
+
+2. Generate a polymock file
+
+```
+$ mocky.py --combine pdf.pdf
+Filetype: Portable Document Format
+Parasite-combined sig(s): SymbOs / netbsd_ktraceS / SoundFX / VirtualBox / ScreamTracker / Plot84 / ezd / dicom / ds / CCP4 / DRDOS / pif / mbr
+> Combined Mock: mA-pdf.pdf
+```
+
+
+3. Check the results
+
+The file is still totally valid.
+
+```
+$ pdftotext mA-pdf.pdf -
+PDF
+```
+
+```
+$ pdfinfo mA-pdf.pdf
+Tagged:         no
+UserProperties: no
+Suspects:       no
+Form:           none
+JavaScript:     no
+Pages:          1
+Encrypted:      no
+Page size:      612 x 792 pts (letter)
+Page rot:       0
+File size:      1272 bytes
+Optimized:      no
+PDF version:    1.3
+```
+
+The detected file type has changed:
+
+```
+$ file mA-pdf.pdf
+mA-pdf.pdf: DR-DOS executable (COM)
+```
+
+It actually contains more signatures, and still detected as PDF too:
+
+```
+$file --keep-going --raw mA-pdf.pdf
+mA-pdf.pdf: DR-DOS executable (COM)
+- Windows Program Information File for  R>>
+- DOS/MBR boot sector
+- Nintendo DS ROM image: "%PDF-1.3" (, Rev.116)
+- Plot84 plotting file DOS/MBR boot sector
+- SymbOS executable v., name: 1 0 obj
+- PDF document, version 1.3
+- Old EZD Electron Density Map
+- Scream Tracker Sample adlib drum mono 8bit
+- SoundFX Module sound file
+- DICOM medical imaging data
+- CCP4 Electron Density Map
+- VirtualBox Disk Image (%PDF-1.3), 5715999566798081280 bytes
+- data
+```
+
 # Notes
 
 ## File formats
@@ -248,7 +331,7 @@ C(66)-PNG-DICOM.7e22f58e.dcm.png: PNG image data, 13 x 7, 1-bit colormap, non-in
 # Related documentation
 
 Paper:
-- [How to Abuse and Fix Authenticated Encryption Without Key Commitment](https://eprint.iacr.org/2020/1456), Nov 2020, Jun 2021.
+- [How to Abuse and Fix Authenticated Encryption Without Key Commitment](https://eprint.iacr.org/2020/1456), Nov 2020 - Dec 2021.
   Ange Albertini, [Thai Duong](https://twitter.com/XorNinja), Shay Gueron, [Stefan Kölbl](https://twitter.com/kste_), Atul Luykx, [Sophie Schmieg](https://twitter.com/SchmiegSophie)
 
 Talks:
