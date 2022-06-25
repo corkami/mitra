@@ -96,6 +96,7 @@ def main():
         if parasitized is not None:
           fdata = parasitized
           print("Parasite-combined sig(s):", " / ".join(sigsp))
+    fdata = fixtarsum(fdata)
     fn = "mA-%s" % (os.path.basename(args.file))
     if sigsc + sigsp != []:
       print("> Combined Mock:", fn)
@@ -122,6 +123,8 @@ def main():
       if sig_o + sig_l > ftype.precav_s:
         return
       cav = b"\0" * sig_o + sig + fdata[sig_o+sig_l:]
+      cav = fixtarsum(cav)
+
       fn = "mC-%s.%s" % (os.path.basename(args.file), mock)
       print("> Cavity Mock:", fn)
       fn = os.path.join(outdir, fn)
@@ -145,6 +148,8 @@ def main():
       if parasitized is None:
         print("ERROR: Parasitizing failure.")
         return
+      parasitized = fixtarsum(parasitized)
+
       fn = "mP-%s.%s" % (os.path.basename(args.file), mock)
       fn = os.path.join(outdir, fn)
       print("> Parasite Mock:", fn)
@@ -160,7 +165,7 @@ def main():
         return
 
       appdata = (sig_o - file_l) * b"\0" + sig
-      appended = fdata + appdata
+      appended = fixtarsum(fdata + appdata)
       fn = "mS-%s.%s" % (os.path.basename(args.file), mock)
       fn = os.path.join(outdir, fn)
       print("> Stack Mock:", fn)
@@ -182,6 +187,7 @@ def main():
       if wrappend is None:
         return
       wrappended = fdata + wrappend
+      wrappended = fixtarsum(wrappended)
       fn = "mW-%s.%s" % (os.path.basename(args.file), mock)
       fn = os.path.join(outdir, fn)
       print("> Wrappended Mock:", fn)

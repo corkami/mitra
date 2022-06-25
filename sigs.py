@@ -1,3 +1,5 @@
+TARSUM = "Tar(checksum)"
+
 mocks = {
   # "DOS":[0, b"MZ"],
   "jpg":[0, b"\xff\xd8"],
@@ -51,7 +53,7 @@ mocks = {
 
   "VICAR":[43, b"SFDU_LABEL"],
 
-  "PolyTracker ":[44, b"PTMF"],
+  "PolyTracker":[44, b"PTMF"],
 
   "SymbOs":[48, b"SymExe"],
 
@@ -77,6 +79,9 @@ mocks = {
 
   "dicom":[128, b"DICM"],
 
+  # Requires padding if the file is too small
+  TARSUM:[148, b"!tarsum!"],
+
   "ds":[192, b"\x24\xff\xae\x51\x69\x9a\xa2\x21"],
 
   "CCP4":[208, b"MAP "],
@@ -85,7 +90,7 @@ mocks = {
 
   "3ds":[256, b"NCCH"],
 
-#  "TAR":[257, b"ustar"], # requires extra padding
+  "Tar":[257, b"ustar  "], # may require extra padding
 
   "gb":[260, b"\xCE\xED\x66\x66\xCC\x0D\x00\x0B"],
 
@@ -182,6 +187,39 @@ for i, test in enumerate(tests):
     import sys
     sys.exit()
 # print("Tests completed")
+
+
+def fixtarsum(d):
+  mock = mocks[TARSUM]
+  if d.find(mock[1]) != mock[0]:
+    return d
+
+  CHECKSUM_o = 0x94
+  HEADER_s = 512
+
+  if len(d) < HEADER_s:
+    return d
+
+  # grab the header
+  hdr = list(d[:HEADER_s])
+
+  # wipe the checksum field with spaces
+  for i in range(8):
+    hdr[i + CHECKSUM_o] = ord(b" ")
+
+  # add all chars of the header to an unsigned int
+  c = 0
+  for i in hdr:
+    c += i
+
+  print(oct(c)[2:])
+  # store the unsigned int in octal, followed by space then NULL
+  for i, j in enumerate(oct(c)[2:]):
+    hdr[i + CHECKSUM_o] = ord(j)
+  hdr[CHECKSUM_o + 6] = ord(b"\0")
+
+  return bytes(hdr) + d[HEADER_s:]
+
 
 def makeMocks():
   for mock in mocks:
