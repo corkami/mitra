@@ -79,8 +79,8 @@ RAR     X X X .   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X 
 
 PDF     X X X X   . X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
 ISO     X X X X   X . X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
-DCM     X X X X   X X .     X X   X X X X X   X X X X X   X X X X X X X X   X X X X X X   X X X X X       37
-TAR     X X X X   X X   .   X X   X     X X     X X   X   X X X X X   X X     X X X X X   X   X X X       30
+DCM     X X X X   X X .     X X   X X X X X X X X X X X   X X X X X X X X   X X X X X X   X X X X X       37
+TAR     X X X X   X X   .   X X   X     X X X   X X   X   X X X X X   X X     X X X X X   X   X X X       30
 
 PS      X X X X   X X X X   .                                                                              8
 MP4     X X X X   X X X X     .                                                                            8
@@ -90,7 +90,7 @@ BMP     X X X X   X X X             .                                           
 BZ2     X X X X   X X X               .                                                                    7
 CAB     X X X X   X X X X               .                                                                  8
 CPIO    X X X X   X X X X                 .                                                                8
-EBML    X X X X   X X                       .                                                              6
+EBML    X X X X   X X X X                   .                                                              8
 ELF     X X X X   X X X                       .                                                            7
 FLV     X X X X   X X X X                       .                                                          8
 Flac    X X X X   X X X X                         .                                                        8
@@ -122,7 +122,7 @@ WASM    X X X X   X X X X                                                       
 ID3v1                                                                                                 .    0
 XZ                                                                                                      .  0
 
-Formats combinations: 286
+Formats combinations: 288
 ```
 
 Notes that some formats are containers and apply to several file types.
@@ -143,19 +143,19 @@ Since it's pure bruteforcing, it's not practical if the filetype requires too ma
                                                                Variable  Unsupported
                                                                 offset     parasite
 Minimal start offset
-         1 2 4 8     9  16  20  23  28  34  40  64  94  132    12  28   
-                      12          26  32  36      68  112 226    16     
+         1 2 4 8     9  13    20  23  28  34  40  64  94  132    12  28   
+                      12  16        26  32  36      68  112 226    16     
 
-         P P J F M T F W G P R I R B C I P C J P E A P I I J    W B O      B E G L N
-         S E P l P I L A Z N I D T M P L S A P C L R C C C a    A P G      Z B I N E
-             G a 4 F V D   G F 3 F P I D D B 2 A F   A O C v    S G G      2 M F K S
-               c   F         F v     O A       P     P     a    M            L
-                               2               N
-                                               G
+         P P J F M T F W E G P R I R B C I P C J P E A P I I J    W B O      B G L N
+         S E P l P I L A B Z N I D T M P L S A P C L R C C C a    A P G      Z I N E
+             G a 4 F V D M   G F 3 F P I D D B 2 A F   A O C v    S G G      2 F K S
+               c   F     L     F v     O A       P     P     a    M    
+                                 2               N
+                                                 G
 
-1* PS    . M A ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?    ? ? ?      ? ? ? ? ?
-2^ PE    M . A A A A A A A A A A A A A A A A A A ! ! ! ! ! !    M M M      ! ! ! ! !
-4+ JPG   A A . A A A A A A A A A A A A A A A A A A A A A A A    A A A      A A A A A
+1* PS    . M A ? ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?    ? ? ?      ? ? ? ?
+2^ PE    M . A A A A A A A A A A A A A A A A A A A ! ! ! ! ! !    M M M      ! ! ! !
+4+ JPG   A A . A A A A A A A A A A A A A A A A A A A A A A A A    A A A      A A A A
 .  .
 .  .     [the table could go on but would take too long to bruteforce]
 
