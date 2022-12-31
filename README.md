@@ -134,7 +134,7 @@ With the `--overlap` option (disabled by default), filetypes starting at the sam
 
 The overwritten content might be restored via any operation,
 such as decryption via specific bruteforced parameters (CBC, GCM...),
-and is stored in the filename between curly brakets.
+and is stored in the filename between curly brackets.
 Ex: `O(5-204){424D4E0100}.bmp.jpg`
 
 Since it's pure bruteforcing, it's not practical if the filetype requires too many bytes to be restored.
@@ -164,7 +164,7 @@ Minimal start offset
 ```
 
 - `*`: hack that relies on line comments with GhostScript - requires the parasite not to contain any new line, **after** encryption.
-- `^`: hack relying on overwritting the `Dos Header`, therefore restricting the parasite space to offsets `2`-`60`.
+- `^`: hack relying on overwriting the `Dos Header`, therefore restricting the parasite space to offsets `2`-`60`.
 - `+`: Signature, comment declaration and length takes all 2 bytes each, in total:
   - to set an exact length, `6` bytes are required.
   - the length is big endian, so you can round up the length and leave the lowest byte uncontrolled, requiring only `5` bytes.
@@ -218,10 +218,11 @@ For example in MP4, where the file starts with the length of the first atom.
 
 # Mocky
 
-Mocky is a script to generates polymocks.
+Mocky is a script to generate polymocks.
 
-It turn valid files into polymocks by inserting mock signature of other file types at the right offset, if possible.
+It turns valid files into polymocks by inserting mock signature of other file types at the right offset, if possible.
 These polymocks might then be detected as something else while retaining their initial validity, depending on the detection engine.
+If a Tar signature is added, then a proper Tar header checksum is also added.
 
 The `--combine` parameters tries to fit as many signatures as accepted by the target file format.
 
@@ -239,9 +240,9 @@ pdf.pdf: PDF document, version 1.3
 2. Generate a polymock file
 
 ```
-$ mocky.py --combine pdf.pdf
+$ mocky.py --combine input/pdf.pdf
 Filetype: Portable Document Format
-Parasite-combined sig(s): SymbOs / netbsd_ktraceS / SoundFX / VirtualBox / ScreamTracker / Plot84 / ezd / dicom / ds / CCP4 / DRDOS / pif / mbr
+Parasite-combined sig(s): SymbOs / netbsd_ktraceS / SoundFX / VirtualBox / ScreamTracker / Plot84 / ezd / dicom / Tar(checksum) / ds / CCP4 / DRDOS / pif / mbr
 > Combined Mock: mA-pdf.pdf
 ```
 
@@ -275,17 +276,18 @@ The detected file type has changed:
 
 ```
 $ file mA-pdf.pdf
-mA-pdf.pdf: DR-DOS executable (COM)
+mA-pdf.pdf: tar archive
 ```
 
 It actually contains more signatures, and still detected as PDF too:
 
 ```
-$file --keep-going --raw mA-pdf.pdf
-mA-pdf.pdf: DR-DOS executable (COM)
+$ file --keep-going --raw mA-pdf.pdf
+mA-pdf.pdf: tar archive
+- DR-DOS executable (COM)
 - Windows Program Information File for  R>>
 - DOS/MBR boot sector
-- Nintendo DS ROM image: "%PDF-1.3" (, Rev.116)
+- Nintendo DS ROM image: "%PDF-1.3" (┬╢, Rev.116)
 - Plot84 plotting file DOS/MBR boot sector
 - SymbOS executable v., name: 1 0 obj
 - PDF document, version 1.3
