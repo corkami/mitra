@@ -22,7 +22,7 @@ __all__ = [
 
 # archives
 	"_7z", "ar", "arj", "cab", "cpio", "gzip", "bzip2", "iso", "rar",
-	"tar", "wad", "xz", "zip_",
+	"tar", "wad", "xz", "zip_", "zstd",
 
 # media
 	"id3v1", "id3v2", "flac", "flv",

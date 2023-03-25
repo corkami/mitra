@@ -8,14 +8,14 @@ import os.path
 from args import *
 
 __version__ = "0.3" # https://semver.org/
-__date__ = "2021-02-19"
+__date__ = "2023-03-25"
 __description__ = "Mitra v%s (%s) by Ange Albertini" % (__version__, __date__)
 
 PARSERS = [
 # magic at 0
 	arj, ar, bmp, bpg, cpio, cab, ebml, elf, flac, flv, gif, icc, ico, ilda, java,
 	jp2, jpg, lnk, id3v2, nes, ogg, pcap, pcapng, pe_sec, pe_hdr, png, psd, riff,
-	svg, tiff, wad, wasm, xz,
+	svg, tiff, wad, wasm, xz, zstd,
 
 # magic potentially further but checked at 0
 	_7z, mp4, pdf, gzip, bzip2, postscript, zip_, rar, rtf,

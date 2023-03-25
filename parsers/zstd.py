@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+from parsers import FType
+from helpers import *
+
+
+class parser(FType):
+    DESC = "Zstandard / LZ4"
+    TYPE = "ZST"
+    MAGICS = [
+        b"\x28\xB5\x2F\xFD",  # Zstd Magic
+        b"\x04\x22\x4D\x18",  # LZ4 Magic
+        b"\x50\x2A\x4D\x18",  # Skippable Frame 0
+        b"\x51\x2A\x4D\x18",  # Skippable Frame 1
+        b"\x52\x2A\x4D\x18",  # Skippable Frame 2
+        b"\x53\x2A\x4D\x18",  # Skippable Frame 3
+        b"\x54\x2A\x4D\x18",  # Skippable Frame 4
+        b"\x55\x2A\x4D\x18",  # Skippable Frame 5
+        b"\x56\x2A\x4D\x18",  # Skippable Frame 6
+        b"\x57\x2A\x4D\x18",  # Skippable Frame 7
+        b"\x58\x2A\x4D\x18",  # Skippable Frame 8
+        b"\x59\x2A\x4D\x18",  # Skippable Frame 9
+        b"\x5A\x2A\x4D\x18",  # Skippable Frame A
+        b"\x5B\x2A\x4D\x18",  # Skippable Frame B
+        b"\x5C\x2A\x4D\x18",  # Skippable Frame C
+        b"\x5D\x2A\x4D\x18",  # Skippable Frame D
+        b"\x5E\x2A\x4D\x18",  # Skippable Frame E
+        b"\x5F\x2A\x4D\x18",  # Skippable Frame F
+    ]
+
+    def __init__(self, data=""):
+        FType.__init__(self, data)
+        self.data = data
+        self.bParasite = True
+        self.parasite_o = 8  # After the JP2 header
+        self.parasite_s = 0xFFFFFFFF  # also exists in 64b flavor
+
+        self.cut = 0
+        self.prewrap = 2 * 4
+
+    def identify(self):
+        for magic in self.MAGICS:
+            if self.data.startswith(magic):
+                return True
+        return False
+
+    def wrap(self, data):
+        return b"\x50\x2A\x4D\x18" + int4l(len(data)) + data
