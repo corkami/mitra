@@ -43,7 +43,6 @@ class parser(FType):
 # assert makeHdr(b"/") == b"/               0           0     0     000     0         `\n"
 # assert makeHdr(b"hello.txt/", perms=644, size=13) == b"hello.txt/      0           0     0     644     13        `\n"
 
-
 	def wrap(self, data):
 		l = len(data)
 
@@ -53,3 +52,6 @@ class parser(FType):
 
 		hdr = self.makeHdr(b"#1/0", size=l)
 		return hdr + data
+
+	def wrappend(self, data):
+		return self.wrap(data)

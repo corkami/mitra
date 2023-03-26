@@ -3,6 +3,7 @@
 from parsers import FType
 from helpers import *
 
+# TODO: validate implicit and explicits Dicom files
 
 class parser(FType):
 	DESC = "DICOM / Digital Imaging and Communications in Medicine"
