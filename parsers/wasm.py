@@ -29,7 +29,7 @@ class parser(FType):
 		FType.__init__(self, data)
 		self.data = data
 
-		self.bAppData = False  # :(
+		self.bAppData = True  # via Wrappending
 
 		self.bParasite = True
 		self.parasite_o = 0xC
@@ -53,3 +53,6 @@ class parser(FType):
 		wrapped = int2b(len(name)) + name + parasite
 		wrapped = b"\0" + toLEB128(len(wrapped)) + wrapped
 		return wrapped
+
+	def wrappend(self, data):
+		return self.wrap(data)
