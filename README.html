@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="mitra">Mitra</h1>
+<p>A tool to generate binary polyglots (files that are valid with several file formats).</p>
+<p>Loosely named after <a href="https://en.wikipedia.org/wiki/Mithridates_VI_of_Pontus">Μιθραδάτης</a>, a famous polyglot. Pronounced <code>mɪtrə</code>.</p>
+<p><a href="NEWS.md">What's new</a>.</p>
+<h2 id="how-to-use">How to use</h2>
+<p><code>mitra.py file1.png file2.dcm</code> gives you a working PNG/DICOM polyglot.</p>
+<p>Check Corkami <a href="https://github.com/corkami/pocs/tree/master/mini">mini</a> or <a href="https://github.com/corkami/pocs/tree/master/tiny">tiny</a> PoCs for input files. and the formats <a href="https://github.com/corkami/formats/tree/WIP">repository</a> for some extra technical info.</p>
+<h1 id="features">Features</h1>
+<p>It tries different layouts: Stacks (appended data), Cavities (blank space), Parasites (comments), Zippers (mutual comments).</p>
+<p>It stores the offsets where the payloads 'switch sizes' between parenthesis for ambiguous ciphertexts.</p>
+<p>Ex: <code>Z(80-162-286)-DICOM^TIFF.be3b767b.dcm.tif</code> is a DICOM/TIFF zipper where the payloads switch side at offsets <code>0x80</code>, <code>0x162</code> and <code>0x286</code>.</p>
+<p>The <code>-s</code> option extracts the 2 payloads separately, mixed with pseudo-random bytes (it doesn't fix checksums afterwards).</p>
+<p>Mitra can generate near-polyglots (with overlapping bytes) with the <code>--overlap</code> parameter. It stores the overlap data between curly braces of the output file - for example, <code>O(d-40a){4D5A}.wasm.exe</code>.</p>
+<h1 id="goals">Goals</h1>
+<h2 id="exploration">Exploration</h2>
+<p>The goal of this project was to explore polyglots layouts, formats abuses, and understand which format features enables which kind of abuse.</p>
+<p>For example, in a chunk-based format, just find where to <code>cut</code> the file, then <code>wrap</code> foreign data in a new chunk and insert the chunk. So you just need to teach Mitra how to <code>identify</code> the type, where to <code>cut</code>, and how to <code>wrap</code>.</p>
+<h2 id="demonstration">Demonstration</h2>
+<p>You can prevent a software launch if you find a security risk, but a bad format design is not considered a risk in itself: it's just the parser's fault, not the designer's !</p>
+<p>So if you review a bad file format, then maybe with Mitra you can quickly generate polyglots with many other formats and demonstrate the risks.</p>
+<h1 id="status">Status</h1>
+<pre><code>                          Delayed                 Magic at offset zero,                  No appended
+      Any offset  Cavities start                 tolerated appended data                     data    Footer
+
+        Z 7 A R   P I D T   P M   A B B C C E E F F G G I I I I J J N O P L P P R R T W   B J P P W   I X
+        i Z r A   D S C A   S P   R M Z A P B L L l I Z C C D L P P E G S N E N I T I A   P a C C A   D Z
+        p   j R   F O M R     4     P 2 B I M F V a F   C O 3 D 2 G S G D K   G F F F D   G v A A S   3
+                                          O L     c         v A                 F   F       a P P M   v
+                                                            2                                   N     1
+
+Zip     . X X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+7Z      X . X X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+Arj     X X . X   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+RAR     X X X .   X X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+
+PDF     X X X X   . X X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+ISO     X X X X   X . X X   X X   X X X X X X X X X X X X X X X X X X X X X X X X X X X   X X X X X       41
+DCM     X X X X   X X .     X X   X X X X X X X X X X X   X X X X X X X X   X X X X X X   X X X X X       37
+TAR     X X X X   X X   .   X X   X     X X X   X X   X   X X X X X   X X     X X X X X   X   X X X       30
+
+PS      X X X X   X X X X   .                                                                              8
+MP4     X X X X   X X X X     .                                                                            8
+
+AR      X X X X   X X X X         .                                                                        8
+BMP     X X X X   X X X             .                                                                      7
+BZ2     X X X X   X X X               .                                                                    7
+CAB     X X X X   X X X X               .                                                                  8
+CPIO    X X X X   X X X X                 .                                                                8
+EBML    X X X X   X X X X                   .                                                              8
+ELF     X X X X   X X X                       .                                                            7
+FLV     X X X X   X X X X                       .                                                          8
+Flac    X X X X   X X X X                         .                                                        8
+GIF     X X X X   X X X                             .                                                      7
+GZ      X X X X   X X X X                             .                                                    8
+ICC     X X X X   X X                                   .                                                  6
+ICO     X X X X   X X X X                                 .                                                8
+ID3v2   X X X X   X X X X                                   .                                              8
+ILDA    X X X X   X X X X                                     .                                            8
+JP2     X X X X   X X X X                                       .                                          8
+JPG     X X X X   X X X X                                         .                                        8
+NES     X X X X   X X X                                             .                                      7
+OGG     X X X X   X X X X                                             .                                    8
+PSD     X X X X   X X X X                                               .                                  8
+LNK     X X X X   X X                                                     .                                6
+PE      X X X X   X X X                                                     .                              7
+PNG     X X X X   X X X X                                                     .                            8
+RIFF    X X X X   X X X X                                                       .                          8
+RTF     X X X X   X X X X                                                         .                        8
+TIFF    X X X X   X X X X                                                           .                      8
+WAD     X X X X   X X X X                                                             .                    8
+
+BPG     X X X X   X X X X                                                                 .                8
+Java    X X X X   X X X                                                                     .              7
+PCAP    X X X X   X X X X                                                                     .            8
+PCAPN   X X X X   X X X X                                                                       .          8
+WASM    X X X X   X X X X                                                                         .        8
+
+ID3v1                                                                                                 .    0
+XZ                                                                                                      .  0
+
+Formats combinations: 288
+</code></pre>
+<p>Notes that some formats are containers and apply to several file types.</p>
+<h2 id="near-polyglots">Near polyglots</h2>
+<p>With the <code>--overlap</code> option (disabled by default), filetypes starting at the same offsets can be combined.</p>
+<p>The overwritten content might be restored via any operation, such as decryption via specific bruteforced parameters (CBC, GCM...), and is stored in the filename between curly brackets. Ex: <code>O(5-204){424D4E0100}.bmp.jpg</code></p>
+<p>Since it's pure bruteforcing, it's not practical if the filetype requires too many bytes to be restored.</p>
+<pre><code>                                                               Variable  Unsupported
+                                                                offset     parasite
+Minimal start offset
+         1 2 4 8     9  13    20  23  28  34  40  64  94  132    12  28   
+                      12  16        26  32  36      68  112 226    16     
+
+         P P J F M T F W E G P R I R B C I P C J P E A P I I J    W B O      B G L N
+         S E P l P I L A B Z N I D T M P L S A P C L R C C C a    A P G      Z I N E
+             G a 4 F V D M   G F 3 F P I D D B 2 A F   A O C v    S G G      2 F K S
+               c   F     L     F v     O A       P     P     a    M    
+                                 2               N
+                                                 G
+
+1* PS    . M A ? ? ? ? ? ? ? A ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?    ? ? ?      ? ? ? ?
+2^ PE    M . A A A A A A A A A A A A A A A A A A A ! ! ! ! ! !    M M M      ! ! ! !
+4+ JPG   A A . A A A A A A A A A A A A A A A A A A A A A A A A    A A A      A A A A
+.  .
+.  .     [the table could go on but would take too long to bruteforce]
+
+           X: automated     ?: likely possible
+           M: manual        !: unknown
+</code></pre>
+<ul>
+<li><code>*</code>: hack that relies on line comments with GhostScript - requires the parasite not to contain any new line, <strong>after</strong> encryption.</li>
+<li><code>^</code>: hack relying on overwriting the <code>Dos Header</code>, therefore restricting the parasite space to offsets <code>2</code>-<code>60</code>.</li>
+<li><code>+</code>: Signature, comment declaration and length takes all 2 bytes each, in total:
+<ul>
+<li>to set an exact length, <code>6</code> bytes are required.</li>
+<li>the length is big endian, so you can round up the length and leave the lowest byte uncontrolled, requiring only <code>5</code> bytes.</li>
+<li>If the entire length is left undefined, and if your payload fits in the resulted encoded length after encryption, then only <code>4</code> bytes are required.</li>
+</ul></li>
+</ul>
+<h1 id="script-polyglots">Script polyglots</h1>
+<p>Some script language (JavaScript, HTML, PHP, Ruby...) tolerate binary contents and can be combined with binary formats.</p>
+<p>Typical exploits target browser-supported formats such as images, GZip, Flash, Mp3...</p>
+<p>Mitra can be used to make room in a binary file.</p>
+<p>There are different strategies for these polyglots:</p>
+<ul>
+<li><em>Multiline comments</em> such as <code>*/ &lt;JavaScript&gt; /*</code> in a parasite. In this case, the embedded content shouldn't output an closing comment statement.</li>
+<li><a href="https://en.wikipedia.org/wiki/Here_document">Here document</a>: In this case, you might want to use the format magic to define a dummy variable with the format magics. For example, <code>MZ = &lt;&lt; HereMarker</code> in the <code>DOS Header</code> of a Portable Executable.</li>
+<li>Terminators can also be used to make sure that the rest of the file is ignored.</li>
+<li>Some formats will enforce some charset even in comments. For example, the current file encoding of the file, or if parenthesis/brackets are balanced.</li>
+</ul>
+<!-- csvtable
+Language|ML Comments|Here doc.|Terminator
+HTML|`<\!--` `--\>`||
+JavaScript|`/*` `*/`||
+Perl|`=pod` `=cut`|`<<`|`__END__`
+PHP|`/*` `*/`|`<<`|
+PostScript|`/{(` `)}`||`stop`
+PowerShell|`<#` `#>`|`@"`|
+Python||`"\""`|
+Ruby|`=begin` `=end`|`<<`|`__END__`
+Shell||`<<`|
+XML|`<![CDATA[` `]]>`||
+-->
+
+<table>
+<thead>
+<tr class="header">
+<th>Language</th>
+<th>ML Comments</th>
+<th>Here doc.</th>
+<th>Terminator</th>
+<th>Charset</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HTML</td>
+<td><code>&lt;!--</code> <code>--&gt;</code></td>
+<td> </td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>JavaScript</td>
+<td><code>/*</code> <code>*/</code></td>
+<td> </td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Perl</td>
+<td><code>=pod</code> <code>=cut</code></td>
+<td><code>&lt;&lt;</code></td>
+<td><code>__END__</code></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>PHP</td>
+<td><code>/*</code> <code>*/</code></td>
+<td><code>&lt;&lt;</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>PostScript</td>
+<td><code>/{(</code> <code>)}</code></td>
+<td> </td>
+<td><code>stop</code></td>
+<td>Balanced syntax</td>
+</tr>
+<tr class="even">
+<td>PowerShell</td>
+<td><code>&lt;#</code> <code>#&gt;</code></td>
+<td><code>@&quot;</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Python</td>
+<td> </td>
+<td><code>&quot;&quot;&quot;</code></td>
+<td></td>
+<td>Encoding</td>
+</tr>
+<tr class="even">
+<td>Ruby</td>
+<td><code>=begin</code> <code>=end</code></td>
+<td><code>&lt;&lt;</code></td>
+<td><code>__END__</code></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Shell</td>
+<td> </td>
+<td><code>&lt;&lt;</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>XML</td>
+<td><code>&lt;![CDATA[</code> <code>]]&gt;</code></td>
+<td> </td>
+<td></td>
+<td>Encoding</td>
+</tr>
+</tbody>
+</table>
+<p>You may want to make room for a specific buffer size to encode a multiline comment via the length declaration of the comment. For example in MP4, where the file starts with the length of the first atom: this length can encode a short comment statement such as <code>//</code> or <code>/*</code>.</p>
+<p>Some combinations may prevent embedding binary files. However, a few binary formats can be exceptionnally turned into ASCII-only files:</p>
+<ul>
+<li>PDF, via the official <em>ASCIIHex</em> codec. For <a href="https://mupdf.com/docs/manual-mutool-clean.html">example</a>, via <code>mutool clean -a</code>.</li>
+<li>Flash files, via <a href="https://github.com/molnarg/ascii-zip">ASCII-only</a> deflate compression and clever header+zlib <a href="https://github.com/mikispag/rosettaflash">manipulation</a>.</li>
+</ul>
+<h1 id="mocky">Mocky</h1>
+<p>Mocky is a script to generate polymocks.</p>
+<p>It turns valid files into polymocks by inserting mock signature of other file types at the right offset, if possible. These polymocks might then be detected as something else while retaining their initial validity, depending on the detection engine. If a Tar signature is added, then a proper Tar header checksum is also added.</p>
+<p>The <code>--combine</code> parameters tries to fit as many signatures as accepted by the target file format.</p>
+<h2 id="example">Example</h2>
+<ol>
+<li>Take a standard PDF file.</li>
+</ol>
+<pre><code>$ file pdf.pdf
+pdf.pdf: PDF document, version 1.3
+</code></pre>
+<ol start="2">
+<li>Generate a polymock file</li>
+</ol>
+<pre><code>$ mocky.py --combine input/pdf.pdf
+Filetype: Portable Document Format
+Parasite-combined sig(s): SymbOs / netbsd_ktraceS / SoundFX / VirtualBox / ScreamTracker / Plot84 / ezd / dicom / Tar(checksum) / ds / CCP4 / DRDOS / pif / mbr
+&gt; Combined Mock: mA-pdf.pdf
+</code></pre>
+<ol start="3">
+<li>Check the results</li>
+</ol>
+<p>The file is still totally valid.</p>
+<pre><code>$ pdftotext mA-pdf.pdf -
+PDF
+</code></pre>
+<pre><code>$ pdfinfo mA-pdf.pdf
+Tagged:         no
+UserProperties: no
+Suspects:       no
+Form:           none
+JavaScript:     no
+Pages:          1
+Encrypted:      no
+Page size:      612 x 792 pts (letter)
+Page rot:       0
+File size:      1272 bytes
+Optimized:      no
+PDF version:    1.3
+</code></pre>
+<p>The detected file type has changed:</p>
+<pre><code>$ file mA-pdf.pdf
+mA-pdf.pdf: tar archive
+</code></pre>
+<p>It actually contains more signatures, and still detected as PDF too:</p>
+<pre><code>$ file --keep-going --raw mA-pdf.pdf
+mA-pdf.pdf: tar archive
+- DR-DOS executable (COM)
+- Windows Program Information File for  R&gt;&gt;
+- DOS/MBR boot sector
+- Nintendo DS ROM image: &quot;%PDF-1.3&quot; (┬╢, Rev.116)
+- Plot84 plotting file DOS/MBR boot sector
+- SymbOS executable v., name: 1 0 obj
+- PDF document, version 1.3
+- Old EZD Electron Density Map
+- Scream Tracker Sample adlib drum mono 8bit
+- SoundFX Module sound file
+- DICOM medical imaging data
+- CCP4 Electron Density Map
+- VirtualBox Disk Image (%PDF-1.3), 5715999566798081280 bytes
+- data
+</code></pre>
+<h1 id="notes">Notes</h1>
+<h2 id="file-formats">File formats</h2>
+<p>Remarks and recommendations to design file formats</p>
+<ul>
+<li>Enforcing a magic at offset zero should be standard.</li>
+<li>Starting at offset zero and not enforcing a magic at zero is still exploitable (PS, MP4).</li>
+<li>Starting at any offset makes polyglots trivial.</li>
+<li>Enforcing a footer (like <code>XZ</code>, <code>ID3v1</code>) is a great way to check if a file isn't truncated, and prevents 'naturally' appended data.</li>
+<li>Most formats have a way to store parasite data, except very simple ones.</li>
+<li>Don't use a standard container in a non standard way. Use a different magic if you're only going to use similar structures to a limited extend.</li>
+</ul>
+<h2 id="polyglots-detection">Polyglots detection</h2>
+<p>Since these polyglots contain the magic signatures of both formats, <code>file</code> may be able to detect them with the <code>--keep-going</code> arguments. (it does not <em>validate</em> the formats, but at least gives you some information).</p>
+<pre><code>$ file --keep-going --raw &quot;C(66)-PNG-DICOM.7e22f58e.dcm.png&quot;
+C(66)-PNG-DICOM.7e22f58e.dcm.png: PNG image data, 13 x 7, 1-bit colormap, non-interlaced
+- DICOM medical imaging data
+- data
+</code></pre>
+<h1 id="related-documentation">Related documentation</h1>
+<p>Paper:</p>
+<ul>
+<li><a href="https://eprint.iacr.org/2020/1456">How to Abuse and Fix Authenticated Encryption Without Key Commitment</a>, Nov 2020 - Dec 2021. Ange Albertini, <a href="https://twitter.com/XorNinja">Thai Duong</a>, Shay Gueron, <a href="https://twitter.com/kste_">Stefan Kölbl</a>, Atul Luykx, <a href="https://twitter.com/SchmiegSophie">Sophie Schmieg</a></li>
+</ul>
+<p>Talks:</p>
+<ul>
+<li><strong>TimeCryption - clean now, malicious later</strong> (DEFCON CH 2021) w/ <a href="https://twitter.com/kste_">Stefan Kölbl</a>, <a href="https://speakerdeck.com/ange/timecryption">slides</a> / <a href="https://www.youtube.com/watch?v=liancIA1m9w">video</a></li>
+<li><strong>Generating weird files - an introduction to Mitra</strong> (Pass the Salt 2021) <a href="https://speakerdeck.com/ange/generating-weird-files">slides</a> / <a href="https://www.youtube.com/watch?v=96FiTaAiUk8&amp;t=7877s">video</a></li>
+</ul>
+<!-- pandoc -s -f gfm -t html README.md -o README.html -->
+</body>
+</html>

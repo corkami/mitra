@@ -180,9 +180,10 @@ Typical exploits target browser-supported formats such as images, GZip, Flash, M
 Mitra can be used to make room in a binary file.
 
 There are different strategies for these polyglots:
-- *Multiline comments* such as `*/ <JavaScript> /*` in the middle 
+- *Multiline comments* such as `*/ <JavaScript> /*` in a parasite. In this case, the embedded content shouldn't output an closing comment statement.
 - [Here document](https://en.wikipedia.org/wiki/Here_document): In this case, you might want to use the format magic to define a dummy variable with the format magics. For example, `MZ = << HereMarker` in the `DOS Header` of a Portable Executable.
 - Terminators can also be used to make sure that the rest of the file is ignored.
+- Some formats will enforce some charset even in comments. For example, the current file encoding of the file, or if parenthesis/brackets are balanced.
 
 <!-- csvtable
 Language|ML Comments|Here doc.|Terminator
@@ -198,22 +199,28 @@ Shell||`<<`|
 XML|`<![CDATA[` `]]>`||
 -->
 
-Language   | ML Comments       | Here doc. | Terminator
----------- | ----------------- | --------- | ----------
-HTML       | `<!--` `-->`      |           |
-JavaScript | `/*` `*/`         |           |
-Perl       | `=pod` `=cut`     | `<<`      | `__END__`
-PHP        | `/*` `*/`         | `<<`      |
-PostScript | `/{(` `)}`        |           | `stop`
-PowerShell | `<#` `#>`         | `@"`      |
-Python     |                   | `"""`     |
-Ruby       | `=begin` `=end`   | `<<`      | `__END__`
-Shell      |                   | `<<`      |
-XML        | `<![CDATA[` `]]>` |           |
+Language   | ML Comments       | Here doc. | Terminator | Charset
+---------- | ----------------- | --------- | ---------- | -------
+HTML       | `<!--` `-->`      |           |            |
+JavaScript | `/*` `*/`         |           |            |
+Perl       | `=pod` `=cut`     | `<<`      | `__END__`  |
+PHP        | `/*` `*/`         | `<<`      |            |
+PostScript | `/{(` `)}`        |           | `stop`     | Balanced syntax
+PowerShell | `<#` `#>`         | `@"`      |            | 
+Python     |                   | `"""`     |            | Encoding
+Ruby       | `=begin` `=end`   | `<<`      | `__END__`  |
+Shell      |                   | `<<`      |            |
+XML        | `<![CDATA[` `]]>` |           |            | Encoding
 
 
 You may want to make room for a specific buffer size to encode a multiline comment via the length declaration of the comment.
-For example in MP4, where the file starts with the length of the first atom.
+For example in MP4, where the file starts with the length of the first atom: this length can encode a short comment statement such as `//` or `/*`.
+
+
+Some combinations may prevent embedding binary files.
+However, a few binary formats can be exceptionnally turned into ASCII-only files:
+- PDF, via the official *ASCIIHex* codec. For [example](https://mupdf.com/docs/manual-mutool-clean.html), via `mutool clean -a`.
+- Flash files, via [ASCII-only](https://github.com/molnarg/ascii-zip) deflate compression and clever header+zlib [manipulation](https://github.com/mikispag/rosettaflash).
 
 
 # Mocky
@@ -343,3 +350,5 @@ Talks:
 - **Generating weird files - an introduction to Mitra** (Pass the Salt 2021)
 [slides](https://speakerdeck.com/ange/generating-weird-files) /
 [video](https://www.youtube.com/watch?v=96FiTaAiUk8&t=7877s)
+
+<!-- pandoc -s -f gfm -t html README.md -o README.html -->
