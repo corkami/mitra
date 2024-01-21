@@ -1,0 +1,11 @@
+24: {
+    1: -1z  # varint
+    1: 150  # varint
+    # 2: -2z # zigzag signed but still varint
+    3: 3.14i32 # i32
+    8: -1i32 # i32
+    4: -2i64 # i64 as fixed64
+    # 22: -1i64 # i64 as fixed64
+    # 12: 9.423e-1 # double as fixed64
+    31: {"Hello!"}
+}
