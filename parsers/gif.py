@@ -14,6 +14,7 @@ def readFlags(ll, f):
 class parser(FType):
 	DESC = "GIF / Graphics Interchange Format"
 	TYPE = "GIF"
+	SUBBLOCK_MAX = 255 # max size of a subblock chunk
 
 	def __init__(self, data=""):
 		FType.__init__(self, data)
@@ -21,7 +22,7 @@ class parser(FType):
 
 		self.bParasite = True
 		self.parasite_o = 16     # Extension, right after the header (extreme case if there's no global palette)
-		self.parasite_s = 255   # max size of a subblock
+		self.parasite_s = self.SUBBLOCK_MAX	# put a higher value for a chunked payload
 
 		self.cut = 13     # variable if global palette is present
 		self.prewrap = 3
@@ -36,8 +37,18 @@ class parser(FType):
 
 
 	def wrap(self, parasite):
-		return b"!" + b"\xfe" + bytes([len(parasite)]) + parasite + b"\0" # terminator
-
+		left = len(parasite)
+		chunked = b""
+		index = 0
+		while left > 0:
+			this_length = min(left, self.SUBBLOCK_MAX)
+			chunked += bytes([this_length]) + parasite[index:index + this_length]
+	
+			left -= this_length
+			index += this_length
+		assert index == len(parasite)
+		chunked += bytes([0]) # terminator
+		return b"!" + b"\xfe" + chunked
 
 	def getCut(self):
 		host = self.data
