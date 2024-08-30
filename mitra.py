@@ -454,7 +454,7 @@ def OverlapAll(ftype1, ftype2, fn1, fn2):
 	Overlap(ftype1, ftype2, fn1, fn2)
 
 
-ext = lambda s:s[s.rfind(".")+1:]
+ext = lambda s:os.path.splitext(s)[1]
 
 
 def DoAll(ftype1, ftype2, fn1, fn2):
