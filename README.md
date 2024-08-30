@@ -1,20 +1,19 @@
 # Mitra
 
-A tool to generate binary polyglots
-(files that are valid with several file formats).
+A tool to generate weird files (parasites, polymocks, polyglots, near-polyglots, crypto-polyglots) for many formats.
 
 Loosely named after [Μιθραδάτης](https://en.wikipedia.org/wiki/Mithridates_VI_of_Pontus),
-a famous polyglot.
-Pronounced `mɪtrə`.
+a polyglot historical figure (it's pronounced `mɪtrə`).
 
 [What's new](NEWS.md).
 
 ## How to use
 
-`mitra.py file1.png file2.dcm` gives you a working PNG/DICOM polyglot.
+- `mitra.py file1.pdf /dev/null -f --pad 2` gives you a standard PDF with an extra range of arbitrary data.
+- `mitra.py file1.png file2.dcm` gives you a working PNG/DICOM polyglot.
 
 Check Corkami [mini](https://github.com/corkami/pocs/tree/master/mini)
-or [tiny](https://github.com/corkami/pocs/tree/master/tiny) PoCs for input files.
+or [tiny](https://github.com/corkami/pocs/tree/master/tiny) PoCs for input files,
 and the formats [repository](https://github.com/corkami/formats/tree/WIP) for some extra technical info.
 
 
